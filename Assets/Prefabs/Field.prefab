@@ -281,7 +281,7 @@ MonoBehaviour:
     type: 3}
   ballPrefab: {fileID: 1944036103121947032, guid: 085c9a90a3d272b439a8a86fb8fd3cf8,
     type: 3}
-  ball: {fileID: 0}
+  ball: {fileID: 402308374553327934, guid: 213a12b96c55e864d9e047195b58de4f, type: 3}
 --- !u!1 &1689587638270882131
 GameObject:
   m_ObjectHideFlags: 0

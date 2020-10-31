@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Boo.Lang;
+using System;
+using UnityEngine;
+using Random = System.Random;
 
 namespace Assets.Scripts
 {
-
-    // TODO: use ignoreCollision
-
-    class Evolution
+    public class Evolution : MonoBehaviour
     {
+        public FieldManager FieldManager;
 
-        readonly Random random = new Random(Guid.NewGuid().GetHashCode());
+        private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         //Steps:
         //Get an environment for each agent
@@ -23,8 +20,22 @@ namespace Assets.Scripts
         //do crossover
         //do mutation
 
+        void Start()
+        {
+            var fields = FieldManager.GetFields(population);
+
+            for (int p = 0; p < population; p++)
+            {
+                currentGeneration.Add(new Agent(new NeuralNetwork(layers)));
+                fields[p].agent = currentGeneration[p];
+            }
+        }
 
 
+        void calculateFitness()
+        {
+
+        }
 
 
         //Crossover probability
@@ -33,24 +44,24 @@ namespace Assets.Scripts
         //Mutation distribution
 
 
-        int population = 1000;
-        float mutationRate = 0.1f;
+        private static readonly int[] layers = new[] { 3, 8, 2 };
+        private static int population = 10;
+        private static float mutationRate = 0.1f;
 
 
-        int generationNo = 0;
-        Agent[] currentGeneration = null;
+        private static int generationNo = 0;
+        private static List<Agent> currentGeneration = null;
 
         //the number of best agents who go to next generation unchanged.
-        float elitRatio = 0.1f; 
-        
+        private static float elitRatio = 0.1f;
 
-        // fitness function
-        void calculateFitness()
-        {
+        private static int maxSimulationDuration = 1; //Minutes
+        private static bool isSimulating = false;
+        private static float simulationStartTime = 0;
 
-        }
 
-        Agent crossover(Agent[] parents)
+
+        private static Agent crossover(Agent[] parents)
         {
             var newBrain = new NeuralNetwork(parents[0].Brain.Layers);
 
@@ -71,7 +82,7 @@ namespace Assets.Scripts
         }
 
 
-        Agent mutate(Agent agent)
+        private static Agent mutate(Agent agent)
         {
             var newBrain = new NeuralNetwork(agent.Brain.Layers);
 

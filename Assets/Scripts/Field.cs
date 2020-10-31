@@ -2,22 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Field : MonoBehaviour
+
+namespace Assets.Scripts
 {
-    // Field keeps the state of every simulation for one agent.
-
-    public Collider2D[] colliders;
-
-    public GameObject playerPrefab;
-    public GameObject ballPrefab;
-
-    public Agent agent;
-    public GameObject ball;
-
-    private void Start()
+    public class Field : MonoBehaviour
     {
-        agent.gameObject = Instantiate(playerPrefab, transform);
-        ball = Instantiate(ballPrefab, transform);
-    }
+        // Field keeps the state of every simulation for one agent.
 
+        public Collider2D[] colliders;
+
+        public Player playerPrefab;
+        public GameObject ballPrefab;
+
+        public Agent agent;
+        public GameObject ball;
+
+        private void Start()
+        {
+            agent.Player = Instantiate(playerPrefab, transform);
+            ball = Instantiate(ballPrefab, transform);
+        }
+
+    }
 }

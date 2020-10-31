@@ -1,15 +1,15 @@
-﻿using Assets.Scripts;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class Agent
+﻿
+namespace Assets.Scripts
 {
-    public NeuralNetwork Brain;
-    public GameObject gameObject;
-
-    public Agent(NeuralNetwork brain)
+    public class Agent
     {
-        this.Brain = brain;
+        public NeuralNetwork Brain;
+        public Player Player;
+        public float fitness = 0;
+
+        public Agent(NeuralNetwork brain)
+        {
+            this.Brain = brain;
+        }
     }
 }
