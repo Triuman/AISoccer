@@ -8,12 +8,13 @@ namespace Assets.Scripts
 {
     public class NeuralNetwork
     {
+        static Random random = new Random(Guid.NewGuid().GetHashCode());
+
         public NeuralNetwork(int[] layers)
         {
+            Layers = layers;
             Weights = new double[layers.Length - 1][,];
             Biases = new double[layers.Length - 1][];
-
-            var rnd = new Random(Guid.NewGuid().GetHashCode());
 
             for (int i = 0; i < layers.Length - 1; i++)
             {
@@ -24,15 +25,20 @@ namespace Assets.Scripts
                 {
                     for (int b = 0; b < layers[i]; b++)
                     {
-                        Weights[i][a, b] = rnd.NextDouble() * 2 - 1f;
+                        Weights[i][a, b] = GetRandomWeight;
                     }
-                    Biases[i][a] = rnd.NextDouble() * 2 - 1f;
+                    Biases[i][a] = GetRandomBias;
                 }
             }
         }
 
+        public int[] Layers { get; private set; }
+
         public double[][,] Weights { get; set; }
         public double[][] Biases { get; set; }
+
+        public static double GetRandomWeight => random.NextDouble() * 2 - 1f;
+        public static double GetRandomBias => random.NextDouble() * 2 - 1f;
 
         public static double[] FeedForward(NeuralNetwork nn, double[] inputs)
         {

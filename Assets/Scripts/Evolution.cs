@@ -12,6 +12,8 @@ namespace Assets.Scripts
     class Evolution
     {
 
+        readonly Random random = new Random(Guid.NewGuid().GetHashCode());
+
         //Steps:
         //Get an environment for each agent
         //Generate a new generation with the population size
@@ -31,23 +33,47 @@ namespace Assets.Scripts
         //Mutation distribution
 
 
-        // population = 1000;
-        // mutationRate = 0.1;
+        int population = 1000;
+        float mutationRate = 0.1f;
 
 
-        // generationNo
-        // currentGeneration
+        int generationNo = 0;
+        Agent[] currentGeneration = null;
 
-        //elitPercentage: the number of best agents who go to next generation unchanged.
-
+        //the number of best agents who go to next generation unchanged.
+        float elitRatio = 0.1f; 
+        
 
         // fitness function
-        // mutate
-        // crossover
+        void calculateFitness()
+        {
+
+        }
+
+        Agent crossover(Agent[] parents)
+        {
+            var newBrain = new NeuralNetwork(parents[0].Brain.Layers);
+
+            for (int l = 0; l < parents[0].Brain.Weights.Length; l++)
+            {
+                for (int n = 0; n < parents[0].Brain.Weights[0].GetLength(0); n++)
+                {
+                    for (int w = 0; w < parents[0].Brain.Weights[0].GetLength(1); w++)
+                    {
+                        int parentIndexWeight = random.Next(parents.Length - 1);
+                        newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomWeight : parents[parentIndexWeight].Brain.Weights[l][n, w];
+                    }
+                    int parentIndexBias = random.Next(parents.Length - 1);
+                    newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomBias : parents[parentIndexBias].Brain.Biases[l][n];
+                }
+            }
+            return new Agent(newBrain);
+        }
+
 
         Agent mutate(Agent agent)
         {
-            var newAgent = new Agent();
+            var newBrain = new NeuralNetwork(agent.Brain.Layers);
 
             for (int l = 0; l < agent.Brain.Weights.Length; l++)
             {
@@ -55,13 +81,12 @@ namespace Assets.Scripts
                 {
                     for (int w = 0; w < agent.Brain.Weights[0].GetLength(1); w++)
                     {
-                        newAgent.Brain.Weights[l][n, w] = agent.Brain.Weights[l][n, w];
+                        newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomWeight : agent.Brain.Weights[l][n, w];
                     }
-
+                    newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomBias : agent.Brain.Biases[l][n];
                 }
             }
-
-            return newAgent;
+            return new Agent(newBrain);
         }
     }
 }
