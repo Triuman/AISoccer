@@ -21,6 +21,8 @@ namespace Assets.Scripts
         // Start is called before the first frame update
         void Awake()
         {
+            Time.timeScale = 4f;
+
             int[] layers = { 3, 1, 2 };
 
             NN = new NeuralNetwork(layers);
