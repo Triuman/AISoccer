@@ -9,6 +9,7 @@ namespace Assets.Scripts
         public GameObject BallPrefab;
 
         public event EventHandler OnBallCollisionEnter;
+        public event EventHandler OnBallCollisionStay2D;
         public event EventHandler<double[]> OnInput;
 
         public Collider2D ballCollider { get; private set; }
@@ -37,6 +38,13 @@ namespace Assets.Scripts
             playerActions.Player.Shoot.Enable();
         }
 
+        // We want to reuse this object instead of creating new ones each generation.
+        public void Reset(Vector2 playerPos)
+        {
+            transform.position = playerPos;
+            ballRigidbody.transform.position = BallPrefab.transform.position;
+        }
+
         private void OnDisable()
         {
             playerActions.Player.Move.performed -= Move_performed;
@@ -44,7 +52,6 @@ namespace Assets.Scripts
             playerActions.Player.Shoot.performed -= Shoot_performed;
             playerActions.Player.Shoot.Disable();
         }
-
 
         // User input
         private void Shoot_performed(InputAction.CallbackContext ctx)
@@ -73,7 +80,7 @@ namespace Assets.Scripts
 
         public double[] PrepareInputs()
         {
-            // 0-7: direction of the ball
+            // 0,1: direction of the ball
             // 8: distance to the ball
             double[] inputs = new double[3];
 
@@ -102,6 +109,14 @@ namespace Assets.Scripts
             if (collision.collider.CompareTag("Ball"))
             {
                 OnBallCollisionEnter?.Invoke(this, null);
+            }
+        }
+
+        private void OnCollisionStay2D(Collision2D collision)
+        {
+            if (collision.collider.CompareTag("Ball"))
+            {
+                OnBallCollisionStay2D?.Invoke(this, null);
             }
         }
     }
