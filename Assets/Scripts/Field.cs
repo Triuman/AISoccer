@@ -9,18 +9,31 @@ namespace Assets.Scripts
     {
         // Field keeps the state of every simulation for one agent.
 
-        public Collider2D[] colliders;
+        public List<Collider2D> colliders;
 
         public Player playerPrefab;
         public GameObject ballPrefab;
 
-        public Agent agent;
+        public Player Player;
         public GameObject ball;
 
-        private void Start()
+        public void Init()
         {
-            agent.Player = Instantiate(playerPrefab, transform);
+            Player = Instantiate(playerPrefab, transform);
+            AddCollider(Player.GetComponent<Collider2D>());
             ball = Instantiate(ballPrefab, transform);
+            AddCollider(ball.GetComponent<Collider2D>());
+            Player.ballRigidbody = ball.GetComponent<Rigidbody2D>();
+        }
+
+        public void SetAgent(Agent agent)
+        {
+            Player.Agent = agent;
+        }
+
+        private void AddCollider(Collider2D collider)
+        {
+            colliders.Add(collider);
         }
 
     }

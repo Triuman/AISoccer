@@ -1,5 +1,5 @@
-﻿using Boo.Lang;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Random = System.Random;
 
@@ -22,19 +22,13 @@ namespace Assets.Scripts
 
         void Start()
         {
-            var fields = FieldManager.GetFields(population);
-
+            currentGeneration = new List<Agent>();
             for (int p = 0; p < population; p++)
             {
                 currentGeneration.Add(new Agent(new NeuralNetwork(layers)));
-                fields[p].agent = currentGeneration[p];
             }
-        }
-
-
-        void calculateFitness()
-        {
-
+            FieldManager.CreateFields(currentGeneration);
+            FieldManager.StartSimulation();
         }
 
 

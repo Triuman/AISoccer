@@ -14,21 +14,25 @@ namespace Assets.Scripts
         public Field FieldPrefab;
 
         private readonly List<Field> fieldsAvailable = new List<Field>();
+        private readonly List<Field> fieldsInUse = new List<Field>();
 
-        public Field[] GetFields(int count)
+        private void Awake()
         {
-            if (fieldsAvailable.Count < count)
+            FieldPrefab.gameObject.SetActive(false);
+        }
+
+        public void CreateFields(List<Agent> agents)
+        {
+            if (fieldsAvailable.Count < agents.Count)
             {
-                InitNewFields(count - fieldsAvailable.Count);
+                InitNewFields(agents.Count - fieldsAvailable.Count);
             }
-            var giveAwayFields = new Field[count];
-            for (int f = 0; f < count; f++)
+            for (int f = 0; f < agents.Count; f++)
             {
-                giveAwayFields[f] = fieldsAvailable[f];
-                giveAwayFields[f].gameObject.SetActive(true);
+                fieldsInUse.Add(fieldsAvailable[f]);
+                fieldsAvailable[f].SetAgent(agents[f]);
             }
-            fieldsAvailable.RemoveRange(0, count);
-            return giveAwayFields;
+            fieldsAvailable.RemoveRange(0, agents.Count);
         }
 
         private void InitNewFields(int count)
@@ -36,6 +40,7 @@ namespace Assets.Scripts
             for (int nf = 0; nf < count; nf++)
             {
                 var newField = Instantiate(FieldPrefab);
+                newField.Init();
                 foreach (var field in fieldsAvailable)
                 {
                     IgnoreCollision(newField, field);
@@ -44,41 +49,29 @@ namespace Assets.Scripts
             }
         }
 
-        public void TakeFieldBack(Field field)
+        public void StartSimulation()
         {
-            field.gameObject.SetActive(false);
-            fieldsAvailable.Add(field);
-        }
-        public void TakeFieldsBack(Field[] fields)
-        {
-            foreach (var field in fields)
+            foreach (var field in fieldsInUse)
             {
-                TakeFieldBack(field);
+                field.gameObject.SetActive(true);
             }
+        }
+        public void EndSimulation()
+        {
+            foreach (var field in fieldsInUse)
+            {
+                field.gameObject.SetActive(false);
+                fieldsAvailable.Add(field);
+            }
+            fieldsInUse.Clear();
         }
 
         private static void IgnoreCollision(Field field1, Field field2)
         {
-            var agent1Collider = field1.agent.Player.gameObject.GetComponent<Collider2D>();
-            var agent2Collider = field2.agent.Player.gameObject.GetComponent<Collider2D>();
-            var ball1Collider = field1.ball.GetComponent<Collider2D>();
-            var ball2Collider = field2.ball.GetComponent<Collider2D>();
-
-            Physics2D.IgnoreCollision(agent1Collider, agent2Collider, true);
-            Physics2D.IgnoreCollision(agent1Collider, ball2Collider, true);
-            Physics2D.IgnoreCollision(agent2Collider, ball1Collider, true);
-            Physics2D.IgnoreCollision(ball1Collider, ball2Collider, true);
-
-            Physics2D.IgnoreCollision(field1.agent.Player.gameObject.GetComponent<Collider2D>(), field2.agent.Player.gameObject.GetComponent<Collider2D>());
             foreach (var collider1 in field1.colliders)
             {
                 foreach (var collider2 in field2.colliders)
                 {
-                    Physics2D.IgnoreCollision(agent1Collider, collider2, true);
-                    Physics2D.IgnoreCollision(ball1Collider, collider2, true);
-                    Physics2D.IgnoreCollision(agent2Collider, collider1, true);
-                    Physics2D.IgnoreCollision(ball2Collider, collider1, true);
-
                     Physics2D.IgnoreCollision(collider1, collider2, true);
                 }
             }
