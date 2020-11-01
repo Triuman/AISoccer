@@ -14,12 +14,15 @@ namespace Assets.Scripts
         public Text TxtGeneration;
         public Text TxtPopulation;
 
+        private const float MinX = -6;
+        private const float MaxX = 7;
+        private const float MinY = -3;
+        private const float MaxY = 2.5f;
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
-
-        private static readonly int[] layers = new[] { 3, 8, 2 };
-        private static int population = 50;
-        private static double mutationRate = 0.2;
+        private static readonly int[] layers = new[] { 3, 16, 2 };
+        private static int population = 100;
+        private static double mutationRate = 0.1;
         private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
 
         private static int generationNo = 0;
@@ -28,6 +31,9 @@ namespace Assets.Scripts
         private static int maxSimulationDuration = 10; //seconds
         private static bool isSimulating = false;
         private static float simulationStartTime = 0;
+
+
+        private Agent SampleAgent;
 
 
         //Steps:
@@ -42,6 +48,10 @@ namespace Assets.Scripts
         void Start()
         {
             Time.timeScale = 4;
+
+            SampleAgent = new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab));
+            SampleAgent.EnableRenderer(true);
+            SampleAgent.Activate();
 
             CreateNewGeneration();
             StartSimulation();
@@ -92,6 +102,7 @@ namespace Assets.Scripts
             else
             {
                 currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
+                SampleAgent.Brain = currentGeneration[0].Brain;
 
                 // Get the elite to the list first
                 int eliteCount = (int)Math.Floor(currentGeneration.Count * eliteRatio);
@@ -99,7 +110,7 @@ namespace Assets.Scripts
                 for (int e = 0; e < eliteCount; e++)
                 {
                     // We put all of the old generation to new one but only the first x are elite and will stay same.
-                    newGeneration[e].Reset(PlayerPrefab.transform.position);
+                    newGeneration[e].Reset(GetRandomPosition());
                 }
 
                 var minFitness = currentGeneration.Min(a => a.fitness);
@@ -113,22 +124,28 @@ namespace Assets.Scripts
                     var childBrain = mutate(parent1);
                     if (newGeneration.Count > eliteCount)
                     {
-                        newGeneration[eliteCount++].Reset(PlayerPrefab.transform.position, childBrain);
+                        newGeneration[eliteCount++].Reset(GetRandomPosition(), childBrain);
                         continue;
                     }
                     Debug.Log("Added new agent.");
+                    PlayerPrefab.transform.position = GetRandomPosition();
                     newGeneration.Add(new Agent(childBrain, Instantiate(PlayerPrefab)));
                 }
             }
 
             for (int i = 0; i < newGeneration.Count; i++)
             {
-                for (int j = i + 1; j < newGeneration.Count; j++)
+                var colliders1 = newGeneration[i].Colliders;
+                for (int c1 = 0; c1 < colliders1.Length; c1++)
                 {
-                    var colliders1 = newGeneration[i].Colliders;
-                    var colliders2 = newGeneration[j].Colliders;
-                    for (int c1 = 0; c1 < colliders1.Length; c1++)
+                    foreach (var sampleCollider in SampleAgent.Colliders)
                     {
+                        Physics2D.IgnoreCollision(colliders1[c1], sampleCollider);
+                    }
+
+                    for (int j = i + 1; j < newGeneration.Count; j++)
+                    {
+                        var colliders2 = newGeneration[j].Colliders;
                         for (int c2 = 0; c2 < colliders2.Length; c2++)
                         {
                             Physics2D.IgnoreCollision(colliders1[c1], colliders2[c2]);
@@ -143,6 +160,10 @@ namespace Assets.Scripts
             TxtPopulation.text = currentGeneration.Count.ToString();
         }
 
+        public static Vector2 GetRandomPosition()
+        {
+            return new Vector2((float)random.NextDouble() * (MaxX - MinX) + MinX, (float)random.NextDouble() * (MaxY - MinY) + MinY);
+        }
 
         private NeuralNetwork SelectRandomlyByFitness(float fitnessSum, float minFitness)
         {

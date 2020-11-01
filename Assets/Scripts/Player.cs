@@ -27,6 +27,7 @@ namespace Assets.Scripts
         void Awake()
         {
             rigidbody = GetComponent<Rigidbody2D>();
+            BallPrefab.transform.position = Evolution.GetRandomPosition();
             var ball = Instantiate(BallPrefab);
             ballRigidbody = ball.GetComponent<Rigidbody2D>();
             ballCollider = ball.GetComponent<Collider2D>();
@@ -42,7 +43,7 @@ namespace Assets.Scripts
         public void Reset(Vector2 playerPos)
         {
             transform.position = playerPos;
-            ballRigidbody.transform.position = BallPrefab.transform.position;
+            ballRigidbody.transform.position = Evolution.GetRandomPosition();
         }
 
         private void OnDisable()

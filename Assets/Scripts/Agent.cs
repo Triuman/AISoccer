@@ -18,6 +18,12 @@ namespace Assets.Scripts
             fitness = 0;
         }
 
+        public void EnableRenderer(bool enable)
+        {
+            Player.GetComponent<SpriteRenderer>().enabled = enable;
+            Player.ballCollider.gameObject.GetComponent<SpriteRenderer>().enabled = enable;
+        }
+
         // We want to reuse this object instead of creating new ones each generation.
         public void Reset(Vector2 playerPos, NeuralNetwork brain = null)
         {
