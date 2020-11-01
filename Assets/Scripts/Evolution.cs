@@ -18,9 +18,9 @@ namespace Assets.Scripts
 
 
         private static readonly int[] layers = new[] { 3, 8, 2 };
-        private static int population = 40;
-        private static float mutationRate = 0.1f;
-        private static float eliteRatio = 0;     //the number of best agents who go to next generation unchanged.
+        private static int population = 50;
+        private static double mutationRate = 0.2;
+        private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
 
         private static int generationNo = 0;
         private static List<Agent> currentGeneration = null;
@@ -109,8 +109,8 @@ namespace Assets.Scripts
                 for (int g = 0; g < remainingCount; g++)
                 {
                     var parent1 = SelectRandomlyByFitness(fitnessSum, minFitness);
-                    var parent2 = SelectRandomlyByFitness(fitnessSum, minFitness);
-                    var childBrain = mutate(crossover(new[] { parent1, parent2 }));
+                    //var parent2 = SelectRandomlyByFitness(fitnessSum, minFitness);
+                    var childBrain = mutate(parent1);
                     if (newGeneration.Count > eliteCount)
                     {
                         newGeneration[eliteCount++].Reset(PlayerPrefab.transform.position, childBrain);
@@ -170,13 +170,13 @@ namespace Assets.Scripts
             {
                 for (int n = 0; n < parents[0].Weights[l].GetLength(0); n++)
                 {
+                    int parentIndex = random.Next(parents.Length);
                     for (int w = 0; w < parents[0].Weights[l].GetLength(1); w++)
                     {
-                        int parentIndexWeight = random.Next(parents.Length - 1);
-                        newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomWeight : parents[parentIndexWeight].Weights[l][n, w];
+                        Debug.Log(parentIndex);
+                        newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomWeight : parents[parentIndex].Weights[l][n, w];
                     }
-                    int parentIndexBias = random.Next(parents.Length - 1);
-                    newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomBias : parents[parentIndexBias].Biases[l][n];
+                    newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomBias : parents[parentIndex].Biases[l][n];
                 }
             }
             return newBrain;
@@ -185,6 +185,7 @@ namespace Assets.Scripts
 
         private static NeuralNetwork mutate(NeuralNetwork brain)
         {
+            var random = new Random();
             //return brain;
             var newBrain = new NeuralNetwork(brain.Layers);
 
@@ -192,12 +193,13 @@ namespace Assets.Scripts
             {
                 for (int n = 0; n < brain.Weights[l].GetLength(0); n++)
                 {
-                    bool mutate = random.NextDouble() < mutationRate;
                     for (int w = 0; w < brain.Weights[l].GetLength(1); w++)
                     {
-                        newBrain.Weights[l][n, w] = mutate ? NeuralNetwork.GetRandomWeight : brain.Weights[l][n, w];
+                        var mutBy = 1 - mutationRate * (random.NextDouble() - 0.5) * 2;
+                        newBrain.Weights[l][n, w] = brain.Weights[l][n, w] * mutBy;
                     }
-                    newBrain.Biases[l][n] = mutate ? NeuralNetwork.GetRandomBias : brain.Biases[l][n];
+                    var mutByBias = 1 - mutationRate * (random.NextDouble() - 0.5) * 2;
+                    newBrain.Biases[l][n] = brain.Biases[l][n] * mutByBias;
                 }
             }
             return newBrain;

@@ -73,7 +73,8 @@ namespace Assets.Scripts
         // Update is called once per frame
         void Update()
         {
-            OnInput.Invoke(this, PrepareInputs());
+            if (OnInput != null)
+                OnInput.Invoke(this, PrepareInputs());
             rigidbody.AddForce(moveVector * 100 * Time.deltaTime);
         }
 
