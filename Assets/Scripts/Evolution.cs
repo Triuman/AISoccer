@@ -7,7 +7,7 @@ namespace Assets.Scripts
 {
     public class Evolution : MonoBehaviour
     {
-        public FieldManager FieldManager;
+        public Player PlayerPrefab;
 
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
@@ -22,13 +22,60 @@ namespace Assets.Scripts
 
         void Start()
         {
+            CreateNewGeneration();
+            StartSimulation();
+        }
+
+        private void CreateNewGeneration(NeuralNetwork[] brains = null)
+        {
+            generationNo++;
             currentGeneration = new List<Agent>();
-            for (int p = 0; p < population; p++)
+            if (brains != null)
             {
-                currentGeneration.Add(new Agent(new NeuralNetwork(layers)));
+                for (int b = 0; b < brains.Length; b++)
+                {
+                    currentGeneration.Add(new Agent(brains[b], Instantiate(PlayerPrefab)));
+                }
             }
-            FieldManager.CreateFields(currentGeneration);
-            FieldManager.StartSimulation();
+            else
+            {
+                for (int p = 0; p < population; p++)
+                {
+                    currentGeneration.Add(new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab)));
+                }
+            }
+            for (int i = 0; i < currentGeneration.Count; i++)
+            {
+                for (int j = i + 1; j < currentGeneration.Count; j++)
+                {
+                    var colliders1 = currentGeneration[i].Colliders;
+                    var colliders2 = currentGeneration[j].Colliders;
+                    for (int c1 = 0; c1 < colliders1.Length; c1++)
+                    {
+                        for (int c2 = 0; c2 < colliders2.Length; c2++)
+                        {
+                            Physics2D.IgnoreCollision(colliders1[c1], colliders2[c2]);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void StartSimulation()
+        {
+            foreach (var agent in currentGeneration)
+            {
+                agent.isActive = true;
+            }
+            isSimulating = true;
+        }
+        private void StopSimulation()
+        {
+            isSimulating = false;
+            foreach (var agent in currentGeneration)
+            {
+                agent.isActive = false;
+            }
         }
 
 
@@ -55,7 +102,7 @@ namespace Assets.Scripts
 
 
 
-        private static Agent crossover(Agent[] parents)
+        private static NeuralNetwork crossover(Agent[] parents)
         {
             var newBrain = new NeuralNetwork(parents[0].Brain.Layers);
 
@@ -72,11 +119,11 @@ namespace Assets.Scripts
                     newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomBias : parents[parentIndexBias].Brain.Biases[l][n];
                 }
             }
-            return new Agent(newBrain);
+            return newBrain;
         }
 
 
-        private static Agent mutate(Agent agent)
+        private static NeuralNetwork mutate(Agent agent)
         {
             var newBrain = new NeuralNetwork(agent.Brain.Layers);
 
@@ -91,7 +138,7 @@ namespace Assets.Scripts
                     newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomBias : agent.Brain.Biases[l][n];
                 }
             }
-            return new Agent(newBrain);
+            return newBrain;
         }
     }
 }
