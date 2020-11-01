@@ -79,11 +79,11 @@ namespace Assets.Scripts
 
             var diffVec = transform.position - ballRigidbody.transform.position;
             float angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[0] = Mathf.Sin(angle);
-            inputs[1] = Mathf.Cos(angle);
+            inputs[0] = Mathf.Sin(angle) * 10;
+            inputs[1] = Mathf.Cos(angle) * 10;
 
             // Distance
-            inputs[2] = Vector2.Distance(transform.position, ballRigidbody.transform.position) / 16f;
+            inputs[2] = Vector2.Distance(transform.position, ballRigidbody.transform.position);
 
             return inputs;
         }
@@ -92,8 +92,8 @@ namespace Assets.Scripts
         {
             // 0: acc x
             // 1: acc y
-            moveVector[0] = Mathf.Asin((float)output[0] - 0.5f);
-            moveVector[1] = Mathf.Acos((float)output[1] - 0.5f);
+            moveVector[0] = (float)output[0] - 0.5f;
+            moveVector[1] = (float)output[1] - 0.5f;
         }
 
 
