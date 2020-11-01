@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 402308374553327904}
   - component: {fileID: 402308374553327905}
-  - component: {fileID: 402308374553327906}
   - component: {fileID: 402308374553327907}
   - component: {fileID: 402308374553327909}
   - component: {fileID: 2644705470239111075}
@@ -53,7 +52,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 6acc12eabc2e0e645bd1fe6329a41faf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -85,19 +84,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &402308374553327906
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 402308374553327934}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 74f3d77d7dfb329468a3dce2d0850fcc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ballRigidbody: {fileID: 0}
 --- !u!50 &402308374553327907
 Rigidbody2D:
   serializedVersion: 4
@@ -134,7 +120,7 @@ CircleCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
-  m_Radius: 0.5
+  m_Radius: 0.32392514
 --- !u!114 &2644705470239111075
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,3 +133,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75af2ab3110c0074498e71b82421a1f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ballRigidbody: {fileID: 0}
