@@ -73,10 +73,8 @@ namespace Assets.Scripts
             fitness += 1 / Vector2.Distance(Player.transform.position, Player.ballCollider.transform.position) / 10000 - 0.0005f;
             // Take ball to the right goal
             var distanceBallToRightGoal = Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position);
-            //distanceBallToRightGoal = 1 / distanceBallToRightGoal;
-            //distanceBallToRightGoal /= 10000;
-            //distanceBallToRightGoal -= 0.0005f;
-            fitness += 1 - 1 / (float)(1 + Math.Pow(Math.E, (-distanceBallToRightGoal + 5)));
+            var distanceFitnessRatio = 0.5f - 1 / (float)(1 + Math.Pow(Math.E, -distanceBallToRightGoal + 5)); // This gives a number between +0.5 and -0.5 using sigmoid.
+            fitness += distanceFitnessRatio * 0.02f;
         }
 
         private void Player_OnBallCollisionEnter(object sender, System.EventArgs e)
