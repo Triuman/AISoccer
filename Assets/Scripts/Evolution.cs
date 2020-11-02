@@ -10,6 +10,7 @@ namespace Assets.Scripts
     public class Evolution : MonoBehaviour
     {
         public Player PlayerPrefab;
+        public Transform RightGoalTransform;
 
         public Text TxtGeneration;
         public Text TxtPopulation;
@@ -20,7 +21,8 @@ namespace Assets.Scripts
         private const float MaxY = 2.5f;
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
-        private static readonly int[] layers = new[] { 3, 16, 2 };
+        private static float timeScale = 10f;
+        private static readonly int[] layers = new[] { 6, 16, 2 };
         private static int population = 100;
         private static double mutationRate = 0.1;
         private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
@@ -28,7 +30,7 @@ namespace Assets.Scripts
         private static int generationNo = 0;
         private static List<Agent> currentGeneration = null;
 
-        private static int maxSimulationDuration = 10; //seconds
+        private static int maxSimulationDuration = 20; //seconds
         private static bool isSimulating = false;
         private static float simulationStartTime = 0;
 
@@ -47,13 +49,9 @@ namespace Assets.Scripts
 
         void Start()
         {
-            Time.timeScale = 4;
+            Time.timeScale = timeScale;
 
-            SampleAgent = new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab));
-            SampleAgent.EnableRenderer(true);
-            SampleAgent.Activate();
-
-            CreateNewGeneration();
+            InitGeneration();
             StartSimulation();
         }
 
@@ -89,53 +87,22 @@ namespace Assets.Scripts
             }
         }
 
-        private void CreateNewGeneration()
+        private void InitGeneration()
         {
-            var newGeneration = new List<Agent>();
-            if (generationNo == 0)
+            SampleAgent = new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab), RightGoalTransform);
+            SampleAgent.EnableRenderer(true);
+            SampleAgent.Activate();
+
+            currentGeneration = new List<Agent>();
+            for (int a = 0; a < population; a++)
             {
-                for (int a = 0; a < population; a++)
-                {
-                    newGeneration.Add(new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab)));
-                }
-            }
-            else
-            {
-                currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
-                SampleAgent.Brain = currentGeneration[0].Brain;
-
-                // Get the elite to the list first
-                int eliteCount = (int)Math.Floor(currentGeneration.Count * eliteRatio);
-                newGeneration.AddRange(currentGeneration); // We take all as we want to reuse all the existing agents
-                for (int e = 0; e < eliteCount; e++)
-                {
-                    // We put all of the old generation to new one but only the first x are elite and will stay same.
-                    newGeneration[e].Reset(GetRandomPosition());
-                }
-
-                var minFitness = currentGeneration.Min(a => a.fitness);
-                var fitnessSum = currentGeneration.Sum(a => a.fitness) - minFitness * currentGeneration.Count;
-
-                int remainingCount = currentGeneration.Count - eliteCount;
-                for (int g = 0; g < remainingCount; g++)
-                {
-                    var parent1 = SelectRandomlyByFitness(fitnessSum, minFitness);
-                    //var parent2 = SelectRandomlyByFitness(fitnessSum, minFitness);
-                    var childBrain = mutate(parent1);
-                    if (newGeneration.Count > eliteCount)
-                    {
-                        newGeneration[eliteCount++].Reset(GetRandomPosition(), childBrain);
-                        continue;
-                    }
-                    Debug.Log("Added new agent.");
-                    PlayerPrefab.transform.position = GetRandomPosition();
-                    newGeneration.Add(new Agent(childBrain, Instantiate(PlayerPrefab)));
-                }
+                PlayerPrefab.transform.position = GetRandomPosition();
+                currentGeneration.Add(new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab), RightGoalTransform));
             }
 
-            for (int i = 0; i < newGeneration.Count; i++)
+            for (int i = 0; i < currentGeneration.Count; i++)
             {
-                var colliders1 = newGeneration[i].Colliders;
+                var colliders1 = currentGeneration[i].Colliders;
                 for (int c1 = 0; c1 < colliders1.Length; c1++)
                 {
                     foreach (var sampleCollider in SampleAgent.Colliders)
@@ -143,9 +110,9 @@ namespace Assets.Scripts
                         Physics2D.IgnoreCollision(colliders1[c1], sampleCollider);
                     }
 
-                    for (int j = i + 1; j < newGeneration.Count; j++)
+                    for (int j = i + 1; j < currentGeneration.Count; j++)
                     {
-                        var colliders2 = newGeneration[j].Colliders;
+                        var colliders2 = currentGeneration[j].Colliders;
                         for (int c2 = 0; c2 < colliders2.Length; c2++)
                         {
                             Physics2D.IgnoreCollision(colliders1[c1], colliders2[c2]);
@@ -153,8 +120,39 @@ namespace Assets.Scripts
                     }
                 }
             }
+        }
 
-            currentGeneration = newGeneration;
+        private void CreateNewGeneration()
+        {
+            var newGenerationBrains = new List<NeuralNetwork>();
+            currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
+            SampleAgent.Brain = currentGeneration[0].Brain;
+
+            // Get the elite to the list first
+            int eliteCount = (int)Math.Floor(currentGeneration.Count * eliteRatio);
+            // newGeneration.AddRange(currentGeneration); // We take all as we want to reuse all the existing agents
+            //for (int e = 0; e < eliteCount; e++)
+            //{
+            //    // We put all of the old generation to new one but only the first x are elite and will stay same.
+            //    newGeneration[e].Reset(GetRandomPosition());
+            //}
+
+            var minFitness = currentGeneration.Min(a => a.fitness * a.fitness);
+            var fitnessSum = currentGeneration.Sum(a => a.fitness * a.fitness) - minFitness * currentGeneration.Count;
+
+            for (int g = eliteCount; g < currentGeneration.Count; g++)
+            {
+                var parent1 = SelectRandomlyByFitness(fitnessSum, minFitness);
+                //var parent2 = SelectRandomlyByFitness(fitnessSum, minFitness);
+                var childBrain = mutate(parent1);
+                newGenerationBrains.Add(childBrain);
+            }
+
+            for (int b = 0; b < newGenerationBrains.Count; b++)
+            {
+                currentGeneration[b].Reset(GetRandomPosition(), newGenerationBrains[b]);
+            }
+
             generationNo++;
             TxtGeneration.text = generationNo.ToString();
             TxtPopulation.text = currentGeneration.Count.ToString();
@@ -170,9 +168,15 @@ namespace Assets.Scripts
             double randomFitness = random.NextDouble() * fitnessSum;
             for (int f = 0; f < currentGeneration.Count; f++)
             {
-                randomFitness -= (currentGeneration[f].fitness - minFitness); // to make all positive numbers
+                randomFitness -= (currentGeneration[f].fitness * currentGeneration[f].fitness - minFitness); // to make all positive numbers
                 if (randomFitness <= 0)
                 {
+                    if (currentGeneration[f].fitness == 0)
+                    {
+                        Debug.LogError(currentGeneration[f].fitness);
+                        Debug.LogError(currentGeneration[f].IsActive);
+                    }
+                    Debug.LogError(f);
                     return currentGeneration[f].Brain;
                 }
                 if (f >= currentGeneration.Count - 1)

@@ -152,6 +152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PlayerPrefab: {fileID: 2644705470239111075, guid: 213a12b96c55e864d9e047195b58de4f,
     type: 3}
+  RightGoalTransform: {fileID: 1935090870}
   TxtGeneration: {fileID: 585796107}
   TxtPopulation: {fileID: 986281080}
 --- !u!4 &346608206
@@ -498,11 +499,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Field
       objectReference: {fileID: 0}
-    - target: {fileID: 1689587638028766990, guid: b9c509b9b93c598449132aed2a46c6ac,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b9c509b9b93c598449132aed2a46c6ac, type: 3}
 --- !u!1 &825650438
@@ -776,6 +772,12 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1665607468}
   m_CullTransparentMesh: 0
+--- !u!4 &1935090870 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1542088788061026269, guid: b9c509b9b93c598449132aed2a46c6ac,
+    type: 3}
+  m_PrefabInstance: {fileID: 762514146}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2064142942
 GameObject:
   m_ObjectHideFlags: 0

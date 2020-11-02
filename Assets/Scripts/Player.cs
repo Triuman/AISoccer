@@ -8,8 +8,11 @@ namespace Assets.Scripts
     {
         public GameObject BallPrefab;
 
+        public Transform rightGoalTransform;
+
         public event EventHandler OnBallCollisionEnter;
         public event EventHandler OnBallCollisionStay2D;
+        public event EventHandler OnCornerCollisionStay2D;
         public event EventHandler<double[]> OnInput;
 
         public Collider2D ballCollider { get; private set; }
@@ -84,8 +87,9 @@ namespace Assets.Scripts
         {
             // 0,1: direction of the ball
             // 8: distance to the ball
-            double[] inputs = new double[3];
+            double[] inputs = new double[6];
 
+            // Player to Ball
             var diffVec = transform.position - ballRigidbody.transform.position;
             float angle = Mathf.Atan2(diffVec.y, diffVec.x);
             inputs[0] = Mathf.Sin(angle) * 10;
@@ -93,6 +97,15 @@ namespace Assets.Scripts
 
             // Distance
             inputs[2] = Vector2.Distance(transform.position, ballRigidbody.transform.position);
+
+            // Ball to Right Goal
+            diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
+            angle = Mathf.Atan2(diffVec.y, diffVec.x);
+            inputs[3] = Mathf.Sin(angle) * 10;
+            inputs[4] = Mathf.Cos(angle) * 10;
+
+            // Distance
+            inputs[5] = Vector2.Distance(ballRigidbody.transform.position, rightGoalTransform.position);
 
             return inputs;
         }
@@ -119,6 +132,14 @@ namespace Assets.Scripts
             if (collision.collider.CompareTag("Ball"))
             {
                 OnBallCollisionStay2D?.Invoke(this, null);
+            }
+        }
+
+        private void OnTriggerStay2D(Collider2D collision)
+        {
+            if (collision.CompareTag("Corner"))
+            {
+                OnCornerCollisionStay2D?.Invoke(this, null);
             }
         }
     }
