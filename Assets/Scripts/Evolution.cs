@@ -15,6 +15,8 @@ namespace Assets.Scripts
         public Text TxtGeneration;
         public Text TxtPopulation;
 
+        public static float MaxFitness = Mathf.NegativeInfinity;
+
         private const float MinX = -6;
         private const float MaxX = 7;
         private const float MinY = -3;
@@ -22,15 +24,15 @@ namespace Assets.Scripts
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         private static float timeScale = 10f;
-        private static readonly int[] layers = new[] { 6, 16, 2 };
-        private static int population = 100;
-        private static double mutationRate = 0.1;
-        private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
+        private static readonly int[] layers = new[] { 6, 50, 2 };
+        private static int population = 300;
+        private static double mutationRate = 0.08;
+        private static float eliteRatio = 0.04f;     //the number of best agents who go to next generation unchanged.
 
         private static int generationNo = 0;
         private static List<Agent> currentGeneration = null;
 
-        private static int maxSimulationDuration = 20; //seconds
+        private static int maxSimulationDuration = 30; //seconds
         private static bool isSimulating = false;
         private static float simulationStartTime = 0;
 
@@ -124,27 +126,29 @@ namespace Assets.Scripts
 
         private void CreateNewGeneration()
         {
+            MaxFitness = Mathf.NegativeInfinity;
             var newGenerationBrains = new List<NeuralNetwork>();
-            currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
-            SampleAgent.Brain = currentGeneration[0].Brain;
-
+            var selectedAgents = currentGeneration.OrderByDescending(a => a.fitness).Take(40).ToList();
+            SampleAgent.Brain = selectedAgents[0].Brain;
             // Get the elite to the list first
-            int eliteCount = (int)Math.Floor(currentGeneration.Count * eliteRatio);
-            // newGeneration.AddRange(currentGeneration); // We take all as we want to reuse all the existing agents
-            //for (int e = 0; e < eliteCount; e++)
-            //{
-            //    // We put all of the old generation to new one but only the first x are elite and will stay same.
-            //    newGeneration[e].Reset(GetRandomPosition());
-            //}
+            int eliteCount = (int)Math.Floor(selectedAgents.Count * eliteRatio);
 
-            var minFitness = currentGeneration.Min(a => a.fitness * a.fitness);
-            var fitnessSum = currentGeneration.Sum(a => a.fitness * a.fitness) - minFitness * currentGeneration.Count;
-
-            for (int g = eliteCount; g < currentGeneration.Count; g++)
+            var minFitness = selectedAgents.Min(a => a.fitness);
+            var fitnessSum = selectedAgents.Sum(a => a.fitness) - minFitness * selectedAgents.Count;
+            selectedAgents.ForEach(agent => agent.fitness = agent.fitness - minFitness); // to make all positive numbers
+            for (int g = 0; g < currentGeneration.Count; g++)
             {
-                var parent1 = SelectRandomlyByFitness(fitnessSum, minFitness);
-                //var parent2 = SelectRandomlyByFitness(fitnessSum, minFitness);
-                var childBrain = mutate(parent1);
+                NeuralNetwork childBrain = null;
+                if(g < eliteCount - 1 && g < selectedAgents.Count)
+                {
+                    childBrain = selectedAgents[g].Brain;
+                }
+                else
+                {
+                    var parent1 = SelectRandomlyByFitness(selectedAgents, fitnessSum, minFitness);
+                    //var parent2 = SelectRandomlyByFitness(fitnessSum, minFitness);
+                    childBrain = mutate(parent1);
+                }
                 newGenerationBrains.Add(childBrain);
             }
 
@@ -163,27 +167,27 @@ namespace Assets.Scripts
             return new Vector2((float)random.NextDouble() * (MaxX - MinX) + MinX, (float)random.NextDouble() * (MaxY - MinY) + MinY);
         }
 
-        private NeuralNetwork SelectRandomlyByFitness(float fitnessSum, float minFitness)
+        private NeuralNetwork SelectRandomlyByFitness(List<Agent> agents, float fitnessSum, float minFitness)
         {
             double randomFitness = random.NextDouble() * fitnessSum;
-            for (int f = 0; f < currentGeneration.Count; f++)
+            for (int f = 0; f < agents.Count; f++)
             {
-                randomFitness -= (currentGeneration[f].fitness * currentGeneration[f].fitness - minFitness); // to make all positive numbers
+                randomFitness -= agents[f].fitness; 
                 if (randomFitness <= 0)
                 {
-                    if (currentGeneration[f].fitness == 0)
+                    if (agents[f].fitness == 0)
                     {
-                        Debug.LogError(currentGeneration[f].fitness);
-                        Debug.LogError(currentGeneration[f].IsActive);
+                        Debug.LogError(agents[f].fitness);
+                        Debug.LogError(agents[f].IsActive);
                     }
-                    Debug.LogError(f);
-                    return currentGeneration[f].Brain;
+                    //Debug.LogError(f.ToString());
+                    return agents[f].Brain;
                 }
-                if (f >= currentGeneration.Count - 1)
+                if (f >= agents.Count - 1)
                     f = 0;
             }
             Debug.LogError("Selected Default!");
-            return currentGeneration[random.Next(currentGeneration.Count - 1)].Brain;
+            return agents[random.Next(agents.Count - 1)].Brain;
         }
 
 

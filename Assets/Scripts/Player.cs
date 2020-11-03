@@ -142,5 +142,15 @@ namespace Assets.Scripts
                 OnCornerCollisionStay2D?.Invoke(this, null);
             }
         }
+
+        public void ShowYourself()
+        {
+            GetComponent<Renderer>().material.SetColor("BodyColor", Color.white);
+        }
+
+        public void HideYourself()
+        {
+            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(58,58,58, 255));
+        }
     }
 }
