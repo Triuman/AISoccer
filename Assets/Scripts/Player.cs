@@ -75,7 +75,7 @@ namespace Assets.Scripts
         }
 
         // Update is called once per frame
-        void Update()
+        void FixedUpdate()
         {
             if (OnInput != null)
                 OnInput.Invoke(this, PrepareInputs());
@@ -151,6 +151,11 @@ namespace Assets.Scripts
         public void HideYourself()
         {
             GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(58,58,58, 255));
+        }
+        public void UpdateColor(float fitnessRatio)
+        {
+            byte color = (byte)Math.Ceiling(Mathf.Min(Mathf.Max(fitnessRatio * 255, 0), 255));
+            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(color, color, color, 255));
         }
     }
 }

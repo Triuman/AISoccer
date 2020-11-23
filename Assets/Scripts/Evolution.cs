@@ -14,7 +14,9 @@ namespace Assets.Scripts
 
         public Text TxtGeneration;
         public Text TxtPopulation;
+        public Text TxtTraining;
 
+        public static float MinFitness = Mathf.Infinity;
         public static float MaxFitness = Mathf.NegativeInfinity;
 
         private const float MinX = -6;
@@ -24,12 +26,15 @@ namespace Assets.Scripts
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         private static float timeScale = 10f;
-        private static readonly int[] layers = new[] { 6, 50, 2 };
-        private static int population = 300;
-        private static double mutationRate = 0.08;
-        private static float eliteRatio = 0.04f;     //the number of best agents who go to next generation unchanged.
+        private static readonly int[] layers = new[] { 6, 10, 2 };
+        private static int population = 100;
+        private static double mutationRate = 0.12;
+        private static float eliteRatio = 0.0f;     //the number of best agents who go to next generation unchanged.
+
+        private static int trainingCount = 5; // Each generation will train x many times with random position before generating new generation.
 
         private static int generationNo = 0;
+        private static int trainingNo = 0;
         private static List<Agent> currentGeneration = null;
 
         private static int maxSimulationDuration = 30; //seconds
@@ -64,7 +69,8 @@ namespace Assets.Scripts
                 if (Time.time - simulationStartTime >= maxSimulationDuration)
                 {
                     StopSimulation();
-                    CreateNewGeneration();
+                    if(trainingNo >= trainingCount)
+                        CreateNewGeneration();
                     StartSimulation();
                 }
             }
@@ -72,8 +78,11 @@ namespace Assets.Scripts
 
         private void StartSimulation()
         {
+            trainingNo++;
+            TxtTraining.text = trainingNo.ToString();
             foreach (var agent in currentGeneration)
             {
+                agent.Reset(GetRandomPosition());
                 agent.Activate();
             }
             simulationStartTime = Time.time;
@@ -93,6 +102,7 @@ namespace Assets.Scripts
         {
             SampleAgent = new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab), RightGoalTransform);
             SampleAgent.EnableRenderer(true);
+            SampleAgent.isSample = true;
             SampleAgent.Activate();
 
             currentGeneration = new List<Agent>();
@@ -126,20 +136,24 @@ namespace Assets.Scripts
 
         private void CreateNewGeneration()
         {
+            trainingNo = 0;
+            MinFitness = Mathf.Infinity;
             MaxFitness = Mathf.NegativeInfinity;
             var newGenerationBrains = new List<NeuralNetwork>();
-            var selectedAgents = currentGeneration.OrderByDescending(a => a.fitness).Take(40).ToList();
+            var orderedByFitness = currentGeneration.OrderByDescending(a => a.fitness);
+            var listt = orderedByFitness.ToList();
+            var selectedAgents = orderedByFitness.Take(60).ToList();
             SampleAgent.Brain = selectedAgents[0].Brain;
             // Get the elite to the list first
             int eliteCount = (int)Math.Floor(selectedAgents.Count * eliteRatio);
 
             var minFitness = selectedAgents.Min(a => a.fitness);
-            var fitnessSum = selectedAgents.Sum(a => a.fitness) - minFitness * selectedAgents.Count;
             selectedAgents.ForEach(agent => agent.fitness = agent.fitness - minFitness); // to make all positive numbers
+            var fitnessSum = selectedAgents.Sum(a => a.fitness);
             for (int g = 0; g < currentGeneration.Count; g++)
             {
                 NeuralNetwork childBrain = null;
-                if(g < eliteCount - 1 && g < selectedAgents.Count)
+                if(g < eliteCount && g < selectedAgents.Count)
                 {
                     childBrain = selectedAgents[g].Brain;
                 }
@@ -154,7 +168,7 @@ namespace Assets.Scripts
 
             for (int b = 0; b < newGenerationBrains.Count; b++)
             {
-                currentGeneration[b].Reset(GetRandomPosition(), newGenerationBrains[b]);
+                currentGeneration[b].Brain = newGenerationBrains[b];
             }
 
             generationNo++;
@@ -222,12 +236,13 @@ namespace Assets.Scripts
             {
                 for (int n = 0; n < brain.Weights[l].GetLength(0); n++)
                 {
+
                     for (int w = 0; w < brain.Weights[l].GetLength(1); w++)
                     {
                         var mutBy = 1 - mutationRate * (random.NextDouble() - 0.5) * 2;
                         newBrain.Weights[l][n, w] = brain.Weights[l][n, w] * mutBy;
                     }
-                    var mutByBias = 1 - mutationRate * (random.NextDouble() - 0.5) * 2;
+                    var mutByBias = 1 - mutationRate * (random.NextDouble() - 0.5) * 0.5;
                     newBrain.Biases[l][n] = brain.Biases[l][n] * mutByBias;
                 }
             }

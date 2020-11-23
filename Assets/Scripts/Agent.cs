@@ -7,9 +7,15 @@ namespace Assets.Scripts
     public class Agent
     {
         public NeuralNetwork Brain;
+        public float fitness;
+        public bool isSample = false;
+
         private Player Player;
         private Vector2 RightGoalPosition;
-        public float fitness;
+
+        bool touchingBall;
+        bool touchingCorner;
+        bool hasMaxFitness;
 
         public bool IsActive { get; private set; }
 
@@ -33,6 +39,9 @@ namespace Assets.Scripts
         {
             Brain = brain ?? Brain;
             fitness = 0;
+            hasMaxFitness = false;
+            touchingBall = false;
+            touchingCorner = false;
             Player.Reset(playerPos);
         }
 
@@ -65,62 +74,76 @@ namespace Assets.Scripts
             if (!IsActive)
                 return;
             Player.ApplyOutput(NeuralNetwork.FeedForward(Brain, inputs));
-            CalculateApproximityFitness();
+            CalculateFitness();
             //Debug.Log(fitness);
         }
 
-        bool touchedTheBall = false;
-        bool hasMaxFitness = false;
-        private void CalculateApproximityFitness()
+        private void CalculateFitness()
         {
-            if (!IsActive)
+            if (!IsActive || isSample)
                 return;
-            // Go to ball
-            fitness += 1 / Vector2.Distance(Player.transform.position, Player.ballCollider.transform.position) / 10000 - 0.0005f;
+            var currentFitness = 0f;
+
+            // Distance to ball
+            var fitnessByDis = 1 / Vector2.Distance(Player.transform.position, Player.ballCollider.transform.position) / 10000 - 0.0005f;
+            currentFitness += fitnessByDis;
+
             // Take ball to the right goal
-            if (touchedTheBall)
+            if (touchingBall)
             {
                 var distanceBallToRightGoal = Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position);
                 var distanceFitnessRatio = 0.5f - 1 / (float)(1 + Math.Pow(Math.E, -distanceBallToRightGoal + 5)); // This gives a number between +0.5 and -0.5 using sigmoid.
-                fitness += distanceFitnessRatio * 0.5f;
+                currentFitness += Mathf.Max(distanceFitnessRatio * 0.5f, 0);
             }
             else
             {
-                fitness -= 0.02f;
-            }
-            if (hasMaxFitness && Evolution.MaxFitness > fitness)
-            {
-                hasMaxFitness = false;
+                currentFitness -= 0.2f;
                 Player.HideYourself();
             }
-            else if (!hasMaxFitness && Evolution.MaxFitness <= fitness)
+
+            if (touchingCorner)
+                currentFitness -= 0.6f;
+
+            if (currentFitness > 0)
+                Player.ShowYourself();
+            else
+                Player.HideYourself();
+
+            fitness += currentFitness;
+
+            if (Evolution.MaxFitness <= fitness)
             {
                 Evolution.MaxFitness = fitness;
-                hasMaxFitness = true;
-                Player.ShowYourself();
             }
+            if (Evolution.MinFitness >= fitness)
+            {
+                Evolution.MinFitness = fitness;
+            }
+            //Player.UpdateColor((fitness - Evolution.MinFitness) / (Evolution.MaxFitness - Evolution.MinFitness));
+
+            touchingBall = false;
+            touchingCorner = false;
         }
 
         private void Player_OnBallCollisionEnter(object sender, System.EventArgs e)
         {
-            if (!IsActive)
+            if (!IsActive || isSample)
                 return;
-            touchedTheBall = true;
-               fitness += 2;
+            touchingBall = true;
         }
 
         private void Player_OnBallCollisionStay2D(object sender, System.EventArgs e)
         {
-            if (!IsActive)
+            if (!IsActive || isSample)
                 return;
-            fitness += 0.002f;
+            touchingBall = true;
         }
 
         private void Player_OnCornerCollisionStay2D(object sender, System.EventArgs e)
         {
-            if (!IsActive)
+            if (!IsActive || isSample)
                 return;
-            fitness -= 1f;
+            touchingCorner = true;
         }
 
     }
