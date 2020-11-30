@@ -87,7 +87,7 @@ namespace Assets.Scripts
         {
             // 0,1: direction of the ball
             // 8: distance to the ball
-            double[] inputs = new double[6];
+            double[] inputs = new double[8];
 
             // Player to Ball
             var diffVec = transform.position - ballRigidbody.transform.position;
@@ -96,16 +96,18 @@ namespace Assets.Scripts
             inputs[1] = Mathf.Cos(angle) * 10;
 
             // Distance
-            inputs[2] = Vector2.Distance(transform.position, ballRigidbody.transform.position);
+            inputs[2] = diffVec.x;
+            inputs[3] = diffVec.y;
 
             // Ball to Right Goal
             diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
             angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[3] = Mathf.Sin(angle) * 10;
-            inputs[4] = Mathf.Cos(angle) * 10;
+            inputs[4] = Mathf.Sin(angle) * 10;
+            inputs[5] = Mathf.Cos(angle) * 10;
 
             // Distance
-            inputs[5] = Vector2.Distance(ballRigidbody.transform.position, rightGoalTransform.position);
+            inputs[6] = diffVec.x;
+            inputs[7] = diffVec.y;
 
             return inputs;
         }

@@ -91,9 +91,10 @@ namespace Assets.Scripts
             // Take ball to the right goal
             if (touchingBall)
             {
-                var distanceBallToRightGoal = Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position);
+                currentFitness += 0.2f;
+                   var distanceBallToRightGoal = Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position);
                 var distanceFitnessRatio = 0.5f - 1 / (float)(1 + Math.Pow(Math.E, -distanceBallToRightGoal + 5)); // This gives a number between +0.5 and -0.5 using sigmoid.
-                currentFitness += Mathf.Max(distanceFitnessRatio * 0.5f, 0);
+                currentFitness += Mathf.Max(distanceFitnessRatio * 0.5f, 0) * 5;
             }
             else
             {
@@ -119,7 +120,7 @@ namespace Assets.Scripts
             {
                 Evolution.MinFitness = fitness;
             }
-            //Player.UpdateColor((fitness - Evolution.MinFitness) / (Evolution.MaxFitness - Evolution.MinFitness));
+            Player.UpdateColor((fitness - Evolution.MinFitness) / (Evolution.MaxFitness - Evolution.MinFitness));
 
             touchingBall = false;
             touchingCorner = false;

@@ -26,7 +26,7 @@ namespace Assets.Scripts
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         private static float timeScale = 10f;
-        private static readonly int[] layers = new[] { 6, 10, 2 };
+        private static readonly int[] layers = new[] { 8, 16, 2 };
         private static int population = 100;
         private static double mutationRate = 0.12;
         private static float eliteRatio = 0.0f;     //the number of best agents who go to next generation unchanged.
@@ -100,10 +100,10 @@ namespace Assets.Scripts
 
         private void InitGeneration()
         {
-            SampleAgent = new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab), RightGoalTransform);
-            SampleAgent.EnableRenderer(true);
-            SampleAgent.isSample = true;
-            SampleAgent.Activate();
+            //SampleAgent = new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab), RightGoalTransform);
+            //SampleAgent.EnableRenderer(true);
+            //SampleAgent.isSample = true;
+            //SampleAgent.Activate();
 
             currentGeneration = new List<Agent>();
             for (int a = 0; a < population; a++)
@@ -117,10 +117,10 @@ namespace Assets.Scripts
                 var colliders1 = currentGeneration[i].Colliders;
                 for (int c1 = 0; c1 < colliders1.Length; c1++)
                 {
-                    foreach (var sampleCollider in SampleAgent.Colliders)
-                    {
-                        Physics2D.IgnoreCollision(colliders1[c1], sampleCollider);
-                    }
+                    //foreach (var sampleCollider in SampleAgent.Colliders)
+                    //{
+                    //    Physics2D.IgnoreCollision(colliders1[c1], sampleCollider);
+                    //}
 
                     for (int j = i + 1; j < currentGeneration.Count; j++)
                     {
@@ -142,8 +142,10 @@ namespace Assets.Scripts
             var newGenerationBrains = new List<NeuralNetwork>();
             var orderedByFitness = currentGeneration.OrderByDescending(a => a.fitness);
             var listt = orderedByFitness.ToList();
-            var selectedAgents = orderedByFitness.Take(60).ToList();
-            SampleAgent.Brain = selectedAgents[0].Brain;
+            var selectedAgents = orderedByFitness.Where(a => a.fitness > 0).ToList();
+            if(selectedAgents.Count == 0)
+                selectedAgents = orderedByFitness.Take(40).ToList();
+            //SampleAgent.Brain = selectedAgents[0].Brain;
             // Get the elite to the list first
             int eliteCount = (int)Math.Floor(selectedAgents.Count * eliteRatio);
 
