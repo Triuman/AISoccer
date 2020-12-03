@@ -26,9 +26,9 @@ namespace Assets.Scripts
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         private static float timeScale = 10f;
-        private static readonly int[] layers = new[] { 8, 16, 2 };
+        private static readonly int[] layers = new[] { 8, 8, 4, 4, 2 };
         private static int population = 100;
-        private static double mutationRate = 0.12;
+        private static double mutationRate = 0.3;
         private static float eliteRatio = 0.0f;     //the number of best agents who go to next generation unchanged.
 
         private static int trainingCount = 5; // Each generation will train x many times with random position before generating new generation.
