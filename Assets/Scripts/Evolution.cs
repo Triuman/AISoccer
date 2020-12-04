@@ -25,19 +25,19 @@ namespace Assets.Scripts
         private const float MaxY = 2.5f;
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
-        private static float timeScale = 10f;
-        private static readonly int[] layers = new[] { 8, 8, 4, 4, 2 };
+        private static float timeScale = 1f;
+        private static readonly int[] layers = new[] { 8, 10, 2 };
         private static int population = 100;
         private static double mutationRate = 0.3;
-        private static float eliteRatio = 0.0f;     //the number of best agents who go to next generation unchanged.
+        private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
 
-        private static int trainingCount = 5; // Each generation will train x many times with random position before generating new generation.
+        private static int trainingCount = 20; // Each generation will train x many times with random position before generating new generation.
 
         private static int generationNo = 0;
         private static int trainingNo = 0;
         private static List<Agent> currentGeneration = null;
 
-        private static int maxSimulationDuration = 30; //seconds
+        private static int maxSimulationDuration = 20; //seconds
         private static bool isSimulating = false;
         private static float simulationStartTime = 0;
 
@@ -56,6 +56,12 @@ namespace Assets.Scripts
 
         void Start()
         {
+            // SampleAgent = new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab), RightGoalTransform);
+            // SampleAgent.EnableRenderer(true);
+            // // SampleAgent.isSample = true;
+            // SampleAgent.Activate();
+
+
             Time.timeScale = timeScale;
 
             InitGeneration();
@@ -82,9 +88,11 @@ namespace Assets.Scripts
             TxtTraining.text = trainingNo.ToString();
             foreach (var agent in currentGeneration)
             {
-                agent.Reset(GetRandomPosition());
+                agent.Reset(GetRandomPosition(), trainingNo == 1);
                 agent.Activate();
             }
+            MinFitness = Mathf.Infinity;
+            MaxFitness = Mathf.NegativeInfinity;
             simulationStartTime = Time.time;
             isSimulating = true;
         }
@@ -140,11 +148,11 @@ namespace Assets.Scripts
             MinFitness = Mathf.Infinity;
             MaxFitness = Mathf.NegativeInfinity;
             var newGenerationBrains = new List<NeuralNetwork>();
-            var orderedByFitness = currentGeneration.OrderByDescending(a => a.fitness);
+            var orderedByFitness = currentGeneration.Where(a => a.fitness != Mathf.NegativeInfinity).OrderByDescending(a => a.fitness);
             var listt = orderedByFitness.ToList();
             var selectedAgents = orderedByFitness.Where(a => a.fitness > 0).ToList();
             if(selectedAgents.Count == 0)
-                selectedAgents = orderedByFitness.Take(40).ToList();
+                selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
             //SampleAgent.Brain = selectedAgents[0].Brain;
             // Get the elite to the list first
             int eliteCount = (int)Math.Floor(selectedAgents.Count * eliteRatio);

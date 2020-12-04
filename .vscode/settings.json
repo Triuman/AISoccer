@@ -1,6 +1,10 @@
 ﻿{
     "files.exclude":
     {
+        "**/*.*.meta": true,
+        "**/Library": true,
+        "**/ProjectSettings": true,
+        "**/Temp": true,
         "**/.DS_Store":true,
         "**/.git":true,
         "**/.gitignore":true,
