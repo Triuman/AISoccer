@@ -10,7 +10,9 @@ namespace Assets.Scripts
 
         public Transform rightGoalTransform;
 
+        public event EventHandler OnShootTheBall;
         public event EventHandler OnRightGoalCollisionEnter;
+        public event EventHandler OnRightGoalCollisionStay;
         public event EventHandler OnBallCollisionEnter;
         public event EventHandler OnBallCollisionStay2D;
         public event EventHandler OnCornerCollisionStay2D;
@@ -23,8 +25,8 @@ namespace Assets.Scripts
         private PlayerInputActions playerActions;
         new private Rigidbody2D rigidbody;
 
-        private const float BallHitDistance = 0.65f;
-        private const float BallHitForce = 100f;
+        private const float BallHitDistance = 0.6f;
+        private const float BallHitForce = 50f;
 
         private const float Speed = 20;
         private Vector2 moveVector = new Vector2();
@@ -65,11 +67,7 @@ namespace Assets.Scripts
         // User input
         private void Shoot_performed(InputAction.CallbackContext ctx)
         {
-            Debug.Log("Shoot");
-            if (Vector2.Distance(transform.position, ballRigidbody.transform.position) < BallHitDistance)
-            {
-                ballRigidbody.AddForce((ballRigidbody.transform.position - transform.position).normalized * BallHitForce);
-            }
+            Shoot();
         }
 
 
@@ -126,18 +124,27 @@ namespace Assets.Scripts
             moveVector[1] = (float)output[1] - 0.5f;
 
             moveVector = moveVector.normalized;
+
+            // Debug.Log(output[2]);
+            if ((float)output[2] > 0.7f)
+                Shoot();
         }
 
+        private void Shoot()
+        {
+            // Debug.Log("Shoot");
+            if (Vector2.Distance(transform.position, ballRigidbody.transform.position) < BallHitDistance)
+            {
+                ballRigidbody.AddForce((ballRigidbody.transform.position - transform.position).normalized * BallHitForce);
+                OnShootTheBall?.Invoke(this, null);
+            }
+        }
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
             if (collision.collider.CompareTag("Ball"))
             {
                 OnBallCollisionEnter?.Invoke(this, null);
-            }
-            else if (collision.collider.CompareTag("RightGoal"))
-            {
-                OnRightGoalCollisionEnter?.Invoke(this, null);
             }
         }
 
@@ -149,11 +156,21 @@ namespace Assets.Scripts
             }
         }
 
-        private void OnTriggerStay2D(Collider2D collision)
+        private void OnTriggerEnter2D(Collider2D collider)
         {
-            if (collision.CompareTag("Corner"))
+            if (collider.CompareTag("RightGoal"))
+            {
+                OnRightGoalCollisionEnter?.Invoke(this, null);
+            }
+        }
+        private void OnTriggerStay2D(Collider2D collider)
+        {
+            if (collider.CompareTag("Corner"))
             {
                 OnCornerCollisionStay2D?.Invoke(this, null);
+            } else if (collider.CompareTag("RightGoal"))
+            {
+                OnRightGoalCollisionStay?.Invoke(this, null);
             }
         }
 
@@ -164,7 +181,7 @@ namespace Assets.Scripts
 
         public void HideYourself()
         {
-            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(58, 58, 58, 255));
+            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(58, 180, 58, 255));
         }
         public void UpdateColor(float fitnessRatio)
         {

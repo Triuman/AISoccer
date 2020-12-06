@@ -25,10 +25,10 @@ namespace Assets.Scripts
         private const float MaxY = 2.5f;
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
-        private static float timeScale = 10f;
-        private static readonly int[] layers = new[] { 4, 10, 2 };
-        private static int population = 100;
-        private static double mutationRate = 0.3;
+        private static float timeScale = 8f;
+        private static readonly int[] layers = new[] { 4, 3 };
+        private static int population = 300;
+        private static double mutationRate = 0.15;
         private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
 
         private static int trainingCount = 10; // Each generation will train x many times with random position before generating new generation.
@@ -75,7 +75,7 @@ namespace Assets.Scripts
                 if (Time.time - simulationStartTime >= maxSimulationDuration)
                 {
                     StopSimulation();
-                    if(trainingNo >= trainingCount)
+                    if (trainingNo >= trainingCount)
                         CreateNewGeneration();
                     StartSimulation();
                 }
@@ -150,9 +150,9 @@ namespace Assets.Scripts
             var newGenerationBrains = new List<NeuralNetwork>();
             var orderedByFitness = currentGeneration.Where(a => a.fitness != Mathf.NegativeInfinity).OrderByDescending(a => a.fitness);
             var listt = orderedByFitness.ToList();
-            var selectedAgents = orderedByFitness.Where(a => a.fitness > 0).ToList();
-            if(selectedAgents.Count == 0)
-                selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
+            var selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
+            // if(selectedAgents.Count == 0)
+            // selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
             //SampleAgent.Brain = selectedAgents[0].Brain;
             // Get the elite to the list first
             int eliteCount = (int)Math.Floor(selectedAgents.Count * eliteRatio);
@@ -163,7 +163,7 @@ namespace Assets.Scripts
             for (int g = 0; g < currentGeneration.Count; g++)
             {
                 NeuralNetwork childBrain = null;
-                if(g < eliteCount && g < selectedAgents.Count)
+                if (g < eliteCount && g < selectedAgents.Count)
                 {
                     childBrain = selectedAgents[g].Brain;
                 }
@@ -196,7 +196,7 @@ namespace Assets.Scripts
             double randomFitness = random.NextDouble() * fitnessSum;
             for (int f = 0; f < agents.Count; f++)
             {
-                randomFitness -= agents[f].fitness; 
+                randomFitness -= agents[f].fitness;
                 if (randomFitness <= 0)
                 {
                     if (agents[f].fitness == 0)

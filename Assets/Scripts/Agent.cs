@@ -14,8 +14,13 @@ namespace Assets.Scripts
         private Vector2 BallInitialPosition;
         private Vector2 RightGoalPosition;
 
+        bool fitnessCanIncrease;
+        bool shotTheBall;
+        bool shotTheBallRewarded;
         bool touchedRightGoal;
+        bool touchingRightGoal;
         bool touchedBall;
+        bool touchingBall;
         bool touchingCorner;
         bool hasMaxFitness;
 
@@ -43,10 +48,14 @@ namespace Assets.Scripts
             Brain = brain ?? Brain;
             fitness = resetFitness ? Mathf.NegativeInfinity : fitness;
             hasMaxFitness = false;
+            shotTheBall = false;
+            shotTheBallRewarded = false;
+            fitnessCanIncrease = false;
             touchedRightGoal = false;
+            touchingRightGoal = false;
             touchedBall = false;
             touchingCorner = false;
-            Player.UpdateColor(0);
+            Player.HideYourself();
             Player.Reset(playerPos);
             BallInitialPosition = Player.ballInitialPosition;
         }
@@ -58,7 +67,9 @@ namespace Assets.Scripts
             if (IsActive)
                 return;
             Player.OnInput += Player_OnInput;
+            Player.OnShootTheBall += Player_OnShootTheBall;
             Player.OnRightGoalCollisionEnter += Player_OnRightGoalCollisionEnter;
+            Player.OnRightGoalCollisionStay += Player_OnRightGoalCollisionStay;
             Player.OnBallCollisionEnter += Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D += Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D += Player_OnCornerCollisionStay2D;
@@ -70,7 +81,9 @@ namespace Assets.Scripts
             if (!IsActive)
                 return;
             Player.OnInput -= Player_OnInput;
+            Player.OnShootTheBall -= Player_OnShootTheBall;
             Player.OnRightGoalCollisionEnter -= Player_OnRightGoalCollisionEnter;
+            Player.OnRightGoalCollisionStay -= Player_OnRightGoalCollisionStay;
             Player.OnBallCollisionEnter -= Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D -= Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D -= Player_OnCornerCollisionStay2D;
@@ -103,7 +116,7 @@ namespace Assets.Scripts
             if (touchedBall)
             {
                 var fitnessByDis = Mathf.Pow(Mathf.Lerp(1, 0, Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position) / Vector2.Distance(BallInitialPosition, RightGoalPosition)), 2);
-                currentFitness += fitnessByDis;
+                currentFitness += fitnessByDis * (shotTheBall ? 1 : 0.5f);
                 // Debug.Log(fitnessByDis);
 
                 // currentFitness += 0.2f;
@@ -113,10 +126,28 @@ namespace Assets.Scripts
                 // Debug.Log(currentFitness);
             }
 
-            if (touchedRightGoal)
+            if (touchedRightGoal && shotTheBall)
             {
                 currentFitness += 500;
                 touchedRightGoal = false;
+            }
+
+            if (shotTheBall && !shotTheBallRewarded)
+            {
+                currentFitness += 50;
+                shotTheBallRewarded = true;
+            }
+
+            if (touchingRightGoal)
+            {
+                currentFitness += 1f;
+                touchingRightGoal = false;
+            }
+
+            if (touchingBall)
+            {
+                currentFitness -= 1f;
+                touchingBall = false;
             }
             // else
             // {
@@ -133,12 +164,13 @@ namespace Assets.Scripts
             //     Player.HideYourself();
 
 
-            // If ball got further, we count it as no achievement.
-            if (Vector2.Distance(BallInitialPosition, RightGoalPosition) < Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position))
-                fitness = Mathf.NegativeInfinity;
+            // // If the ball got further from the goal, we count it as no achievement.
+            // if (Vector2.Distance(BallInitialPosition, RightGoalPosition) < Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position)){
+            //     fitness = Mathf.NegativeInfinity;
+            //     fitnessCanIncrease = false;
+            // }
 
-
-            if (fitness == Mathf.NegativeInfinity)
+            if (!fitnessCanIncrease)
                 return;
             fitness += currentFitness;
             // Debug.Log(fitness + "  -  " + currentFitness);
@@ -151,12 +183,23 @@ namespace Assets.Scripts
             {
                 Evolution.MinFitness = fitness;
             }
-            Player.UpdateColor((fitness - Evolution.MinFitness) / (Evolution.MaxFitness - Evolution.MinFitness));
+            if (shotTheBall)
+                Player.UpdateColor((fitness - Evolution.MinFitness) / (Evolution.MaxFitness - Evolution.MinFitness));
 
             // touchingBall = false;
             // touchingCorner = false;
         }
 
+
+        private void Player_OnShootTheBall(object sender, System.EventArgs e)
+        {
+            if (!IsActive || isSample)
+                return;
+            Player.OnShootTheBall -= Player_OnShootTheBall;
+            shotTheBall = true;
+            fitness = fitness == Mathf.NegativeInfinity ? 0 : fitness;
+            fitnessCanIncrease = true; // this means; if didnt shot the ball, player gets no point.
+        }
 
         private void Player_OnRightGoalCollisionEnter(object sender, System.EventArgs e)
         {
@@ -166,20 +209,28 @@ namespace Assets.Scripts
             touchedRightGoal = true;
         }
 
+        private void Player_OnRightGoalCollisionStay(object sender, System.EventArgs e)
+        {
+            if (!IsActive || isSample)
+                return;
+            touchingRightGoal = true;
+        }
+
         private void Player_OnBallCollisionEnter(object sender, System.EventArgs e)
         {
             if (!IsActive || isSample)
                 return;
             Player.OnBallCollisionEnter -= Player_OnBallCollisionEnter;
             touchedBall = true;
-            fitness = 0;
+            fitness = fitness == Mathf.NegativeInfinity ? 0 : fitness;
+            fitnessCanIncrease = true;
         }
 
         private void Player_OnBallCollisionStay2D(object sender, System.EventArgs e)
         {
-            // if (!IsActive || isSample)
-            //     return;
-            // touchingBall = true;
+            if (!IsActive || isSample)
+                return;
+            touchingBall = true;
         }
 
         private void Player_OnCornerCollisionStay2D(object sender, System.EventArgs e)
