@@ -11,8 +11,10 @@ namespace Assets.Scripts
         public bool isSample = false;
 
         private Player Player;
+        private Vector2 BallInitialPosition;
         private Vector2 RightGoalPosition;
 
+        bool touchedRightGoal;
         bool touchedBall;
         bool touchingCorner;
         bool hasMaxFitness;
@@ -24,6 +26,7 @@ namespace Assets.Scripts
             Brain = brain;
             Player = player;
             Player.rightGoalTransform = rightGoalTransform;
+            BallInitialPosition = Player.ballInitialPosition;
             RightGoalPosition = rightGoalTransform.position;
             fitness = Mathf.NegativeInfinity;
         }
@@ -40,10 +43,12 @@ namespace Assets.Scripts
             Brain = brain ?? Brain;
             fitness = resetFitness ? Mathf.NegativeInfinity : fitness;
             hasMaxFitness = false;
+            touchedRightGoal = false;
             touchedBall = false;
             touchingCorner = false;
             Player.UpdateColor(0);
             Player.Reset(playerPos);
+            BallInitialPosition = Player.ballInitialPosition;
         }
 
         public Collider2D[] Colliders => new[] { Player.gameObject.GetComponent<Collider2D>(), Player.ballCollider };
@@ -53,6 +58,7 @@ namespace Assets.Scripts
             if (IsActive)
                 return;
             Player.OnInput += Player_OnInput;
+            Player.OnRightGoalCollisionEnter += Player_OnRightGoalCollisionEnter;
             Player.OnBallCollisionEnter += Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D += Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D += Player_OnCornerCollisionStay2D;
@@ -64,6 +70,7 @@ namespace Assets.Scripts
             if (!IsActive)
                 return;
             Player.OnInput -= Player_OnInput;
+            Player.OnRightGoalCollisionEnter -= Player_OnRightGoalCollisionEnter;
             Player.OnBallCollisionEnter -= Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D -= Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D -= Player_OnCornerCollisionStay2D;
@@ -95,7 +102,7 @@ namespace Assets.Scripts
             // Take ball to the right goal
             if (touchedBall)
             {
-                var fitnessByDis = Mathf.Pow(Mathf.Lerp(1, 0, Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position) / 20f), 2);
+                var fitnessByDis = Mathf.Pow(Mathf.Lerp(1, 0, Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position) / Vector2.Distance(BallInitialPosition, RightGoalPosition)), 2);
                 currentFitness += fitnessByDis;
                 // Debug.Log(fitnessByDis);
 
@@ -104,6 +111,12 @@ namespace Assets.Scripts
                 // var distanceFitnessRatio = 1f - 1 / (float)(1 + Math.Pow(Math.E, -distanceBallToRightGoal + 5)); // This gives a number between +0.5 and -0.5 using sigmoid.
                 // currentFitness += Mathf.Max(distanceFitnessRatio * 0.5f, 0) * 5;
                 // Debug.Log(currentFitness);
+            }
+
+            if (touchedRightGoal)
+            {
+                currentFitness += 500;
+                touchedRightGoal = false;
             }
             // else
             // {
@@ -118,6 +131,13 @@ namespace Assets.Scripts
             //     Player.ShowYourself();
             // else
             //     Player.HideYourself();
+
+
+            // If ball got further, we count it as no achievement.
+            if (Vector2.Distance(BallInitialPosition, RightGoalPosition) < Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position))
+                fitness = Mathf.NegativeInfinity;
+
+
             if (fitness == Mathf.NegativeInfinity)
                 return;
             fitness += currentFitness;
@@ -135,6 +155,15 @@ namespace Assets.Scripts
 
             // touchingBall = false;
             // touchingCorner = false;
+        }
+
+
+        private void Player_OnRightGoalCollisionEnter(object sender, System.EventArgs e)
+        {
+            if (!IsActive || isSample)
+                return;
+            Player.OnRightGoalCollisionEnter -= Player_OnRightGoalCollisionEnter;
+            touchedRightGoal = true;
         }
 
         private void Player_OnBallCollisionEnter(object sender, System.EventArgs e)

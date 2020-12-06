@@ -10,12 +10,14 @@ namespace Assets.Scripts
 
         public Transform rightGoalTransform;
 
+        public event EventHandler OnRightGoalCollisionEnter;
         public event EventHandler OnBallCollisionEnter;
         public event EventHandler OnBallCollisionStay2D;
         public event EventHandler OnCornerCollisionStay2D;
         public event EventHandler<double[]> OnInput;
 
         public Collider2D ballCollider { get; private set; }
+        public Vector2 ballInitialPosition = new Vector2();
         private Rigidbody2D ballRigidbody;
 
         private PlayerInputActions playerActions;
@@ -31,6 +33,7 @@ namespace Assets.Scripts
         {
             rigidbody = GetComponent<Rigidbody2D>();
             BallPrefab.transform.position = Evolution.GetRandomPosition();
+            ballInitialPosition = BallPrefab.transform.position;
             var ball = Instantiate(BallPrefab);
             ballRigidbody = ball.GetComponent<Rigidbody2D>();
             ballCollider = ball.GetComponent<Collider2D>();
@@ -47,6 +50,7 @@ namespace Assets.Scripts
         {
             transform.position = playerPos;
             ballRigidbody.transform.position = Evolution.GetRandomPosition();
+            ballInitialPosition = ballRigidbody.transform.position;
         }
 
         private void OnDisable()
@@ -87,7 +91,7 @@ namespace Assets.Scripts
         {
             // 0,1: direction of the ball
             // 8: distance to the ball
-            double[] inputs = new double[8];
+            double[] inputs = new double[4];
 
             // Player to Ball
             var diffVec = transform.position - ballRigidbody.transform.position;
@@ -95,25 +99,26 @@ namespace Assets.Scripts
             inputs[0] = Mathf.Sin(angle) * 10;
             inputs[1] = Mathf.Cos(angle) * 10;
 
-            // Distance
-            inputs[2] = diffVec.x;
-            inputs[3] = diffVec.y;
+            // // Distance
+            // inputs[0] = diffVec.x;
+            // inputs[1] = diffVec.y;
 
             // Ball to Right Goal
             diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
             angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[4] = Mathf.Sin(angle) * 10;
-            inputs[5] = Mathf.Cos(angle) * 10;
+            inputs[2] = Mathf.Sin(angle) * 10;
+            inputs[3] = Mathf.Cos(angle) * 10;
 
-            // Distance
-            inputs[6] = diffVec.x;
-            inputs[7] = diffVec.y;
+            // // Distance
+            // inputs[2] = diffVec.x;
+            // inputs[3] = diffVec.y;
 
             return inputs;
         }
 
         public void ApplyOutput(double[] output)
         {
+            // return;
             // 0: acc x
             // 1: acc y
             moveVector[0] = (float)output[0] - 0.5f;
@@ -126,6 +131,10 @@ namespace Assets.Scripts
             if (collision.collider.CompareTag("Ball"))
             {
                 OnBallCollisionEnter?.Invoke(this, null);
+            }
+            else if (collision.collider.CompareTag("RightGoal"))
+            {
+                OnRightGoalCollisionEnter?.Invoke(this, null);
             }
         }
 
@@ -152,7 +161,7 @@ namespace Assets.Scripts
 
         public void HideYourself()
         {
-            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(58,58,58, 255));
+            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(58, 58, 58, 255));
         }
         public void UpdateColor(float fitnessRatio)
         {

@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 402308374553327934}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.6778836, y: -1.3474462, z: 0}
+  m_LocalPosition: {x: -2.9491165, y: -2.881399, z: 0}
   m_LocalScale: {x: 0.7, y: 0.7, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -137,3 +137,4 @@ MonoBehaviour:
   BallPrefab: {fileID: 1944036103121947032, guid: 085c9a90a3d272b439a8a86fb8fd3cf8,
     type: 3}
   rightGoalTransform: {fileID: 0}
+  ballInitialPosition: {x: 0, y: 0}

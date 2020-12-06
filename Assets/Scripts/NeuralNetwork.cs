@@ -42,11 +42,21 @@ namespace Assets.Scripts
         }
         public static double[] FeedForward(double[] inputs, double [][,] weights, double [][] biases, int layer)
         {
-            var output = Sigmoid(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer]));
             if (layer == biases.Length - 1)
-                return output;
-            return FeedForward(Sigmoid(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer])), weights, biases, layer + 1);
+                return Sigmoid(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer]));
+            return FeedForward(Tanh(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer])), weights, biases, layer + 1);
         }
+
+        public static double[] Tanh(double[] X)
+        {
+            var result = new double[X.Length];
+            for (int i = 0; i < X.Length; i++)
+            {
+                result[i] = Math.Tanh(X[i]);
+            }
+            return result;
+        }
+
 
         public static double[] Sigmoid(double[] X)
         {

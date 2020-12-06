@@ -25,19 +25,19 @@ namespace Assets.Scripts
         private const float MaxY = 2.5f;
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
-        private static float timeScale = 1f;
-        private static readonly int[] layers = new[] { 8, 10, 2 };
+        private static float timeScale = 10f;
+        private static readonly int[] layers = new[] { 4, 10, 2 };
         private static int population = 100;
         private static double mutationRate = 0.3;
         private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
 
-        private static int trainingCount = 20; // Each generation will train x many times with random position before generating new generation.
+        private static int trainingCount = 10; // Each generation will train x many times with random position before generating new generation.
 
         private static int generationNo = 0;
         private static int trainingNo = 0;
         private static List<Agent> currentGeneration = null;
 
-        private static int maxSimulationDuration = 20; //seconds
+        private static int maxSimulationDuration = 30; //seconds
         private static bool isSimulating = false;
         private static float simulationStartTime = 0;
 
