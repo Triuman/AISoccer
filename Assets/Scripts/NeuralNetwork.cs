@@ -43,7 +43,7 @@ namespace Assets.Scripts
         public static double[] FeedForward(double[] inputs, double [][,] weights, double [][] biases, int layer)
         {
             if (layer == biases.Length - 1)
-                return Sigmoid(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer]));
+                return Tanh(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer]));
             return FeedForward(Tanh(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer])), weights, biases, layer + 1);
         }
 

@@ -26,6 +26,7 @@ namespace Assets.Scripts
         private const float BallHitDistance = 0.65f;
         private const float BallHitForce = 100f;
 
+        private const float Speed = 20;
         private Vector2 moveVector = new Vector2();
 
         // Start is called before the first frame update
@@ -83,7 +84,7 @@ namespace Assets.Scripts
         {
             if (OnInput != null)
                 OnInput.Invoke(this, PrepareInputs());
-            rigidbody.AddForce(moveVector * 100 * Time.deltaTime);
+            rigidbody.AddForce(moveVector * Speed * Time.deltaTime);
         }
 
 
@@ -96,8 +97,8 @@ namespace Assets.Scripts
             // Player to Ball
             var diffVec = transform.position - ballRigidbody.transform.position;
             float angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[0] = Mathf.Sin(angle) * 10;
-            inputs[1] = Mathf.Cos(angle) * 10;
+            inputs[0] = Mathf.Sin(angle);
+            inputs[1] = Mathf.Cos(angle);
 
             // // Distance
             // inputs[0] = diffVec.x;
@@ -106,8 +107,8 @@ namespace Assets.Scripts
             // Ball to Right Goal
             diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
             angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[2] = Mathf.Sin(angle) * 10;
-            inputs[3] = Mathf.Cos(angle) * 10;
+            inputs[2] = Mathf.Sin(angle);
+            inputs[3] = Mathf.Cos(angle);
 
             // // Distance
             // inputs[2] = diffVec.x;
@@ -123,6 +124,8 @@ namespace Assets.Scripts
             // 1: acc y
             moveVector[0] = (float)output[0] - 0.5f;
             moveVector[1] = (float)output[1] - 0.5f;
+
+            moveVector = moveVector.normalized;
         }
 
 
