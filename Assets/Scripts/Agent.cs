@@ -6,7 +6,7 @@ namespace Assets.Scripts
 {
     public class Agent
     {
-        public NeuralNetwork Brain;
+        public FeedForwardNN Brain;
         public float fitness;
         public bool isSample = false;
 
@@ -26,7 +26,7 @@ namespace Assets.Scripts
 
         public bool IsActive { get; private set; }
 
-        public Agent(NeuralNetwork brain, Player player, Transform rightGoalTransform)
+        public Agent(FeedForwardNN brain, Player player, Transform rightGoalTransform)
         {
             Brain = brain;
             Player = player;
@@ -43,7 +43,7 @@ namespace Assets.Scripts
         }
 
         // We want to reuse this object instead of creating new ones each generation.
-        public void Reset(Vector2 playerPos, bool resetFitness = false, NeuralNetwork brain = null)
+        public void Reset(Vector2 playerPos, bool resetFitness = false, FeedForwardNN brain = null)
         {
             Brain = brain ?? Brain;
             fitness = resetFitness ? Mathf.NegativeInfinity : fitness;
@@ -94,7 +94,7 @@ namespace Assets.Scripts
         {
             if (!IsActive)
                 return;
-            Player.ApplyOutput(NeuralNetwork.FeedForward(Brain, inputs));
+            Player.ApplyOutput(FeedForwardNN.FeedForward(Brain, inputs));
             CalculateFitness();
             //Debug.Log(fitness);
         }

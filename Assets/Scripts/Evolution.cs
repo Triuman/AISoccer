@@ -117,7 +117,7 @@ namespace Assets.Scripts
             for (int a = 0; a < population; a++)
             {
                 PlayerPrefab.transform.position = GetRandomPosition();
-                currentGeneration.Add(new Agent(new NeuralNetwork(layers), Instantiate(PlayerPrefab), RightGoalTransform));
+                currentGeneration.Add(new Agent(new FeedForwardNN(layers), Instantiate(PlayerPrefab), RightGoalTransform));
             }
 
             for (int i = 0; i < currentGeneration.Count; i++)
@@ -147,7 +147,7 @@ namespace Assets.Scripts
             trainingNo = 0;
             MinFitness = Mathf.Infinity;
             MaxFitness = Mathf.NegativeInfinity;
-            var newGenerationBrains = new List<NeuralNetwork>();
+            var newGenerationBrains = new List<FeedForwardNN>();
             var orderedByFitness = currentGeneration.Where(a => a.fitness != Mathf.NegativeInfinity).OrderByDescending(a => a.fitness);
             var listt = orderedByFitness.ToList();
             var selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
@@ -162,7 +162,7 @@ namespace Assets.Scripts
             var fitnessSum = selectedAgents.Sum(a => a.fitness);
             for (int g = 0; g < currentGeneration.Count; g++)
             {
-                NeuralNetwork childBrain = null;
+                FeedForwardNN childBrain = null;
                 if (g < eliteCount && g < selectedAgents.Count)
                 {
                     childBrain = selectedAgents[g].Brain;
@@ -191,7 +191,7 @@ namespace Assets.Scripts
             return new Vector2((float)random.NextDouble() * (MaxX - MinX) + MinX, (float)random.NextDouble() * (MaxY - MinY) + MinY);
         }
 
-        private NeuralNetwork SelectRandomlyByFitness(List<Agent> agents, float fitnessSum, float minFitness)
+        private FeedForwardNN SelectRandomlyByFitness(List<Agent> agents, float fitnessSum, float minFitness)
         {
             double randomFitness = random.NextDouble() * fitnessSum;
             for (int f = 0; f < agents.Count; f++)
@@ -215,9 +215,9 @@ namespace Assets.Scripts
         }
 
 
-        private static NeuralNetwork crossover(NeuralNetwork[] parents)
+        private static FeedForwardNN crossover(FeedForwardNN[] parents)
         {
-            var newBrain = new NeuralNetwork(parents[0].Layers);
+            var newBrain = new FeedForwardNN(parents[0].Layers);
 
             for (int l = 0; l < parents[0].Weights.Length; l++)
             {
@@ -227,20 +227,20 @@ namespace Assets.Scripts
                     for (int w = 0; w < parents[0].Weights[l].GetLength(1); w++)
                     {
                         Debug.Log(parentIndex);
-                        newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomWeight : parents[parentIndex].Weights[l][n, w];
+                        newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? FeedForwardNN.GetRandomWeight : parents[parentIndex].Weights[l][n, w];
                     }
-                    newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? NeuralNetwork.GetRandomBias : parents[parentIndex].Biases[l][n];
+                    newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? FeedForwardNN.GetRandomBias : parents[parentIndex].Biases[l][n];
                 }
             }
             return newBrain;
         }
 
 
-        private static NeuralNetwork mutate(NeuralNetwork brain)
+        private static FeedForwardNN mutate(FeedForwardNN brain)
         {
             var random = new Random();
             //return brain;
-            var newBrain = new NeuralNetwork(brain.Layers);
+            var newBrain = new FeedForwardNN(brain.Layers);
 
             for (int l = 0; l < brain.Weights.Length; l++)
             {
