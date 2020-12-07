@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 class Matrix
 {
@@ -77,6 +78,20 @@ class Matrix
             sum += v1[i] * v2[i];
         }
         return sum;
+    }
+
+    public static double[] softmax(double[] v)
+    {
+        var v_exp = v.Select(Math.Exp);
+        // [2.72, 7.39, 20.09, 54.6, 2.72, 7.39, 20.09]
+
+        var sum_v_exp = v_exp.Sum();
+        // 114.98
+
+        var softmax = v_exp.Select(i => i / sum_v_exp);
+        // [0.024, 0.064, 0.175, 0.475, 0.024, 0.064, 0.175]
+
+        return softmax as double[];
     }
 
     public static void printMatrix(double[,] m)
