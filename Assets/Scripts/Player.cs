@@ -90,13 +90,29 @@ namespace Assets.Scripts
         {
             // 0,1: direction of the ball
             // 8: distance to the ball
-            double[] inputs = new double[4];
+            double[] inputs = new double[9];
 
             // Player to Ball
             var diffVec = transform.position - ballRigidbody.transform.position;
             float angle = Mathf.Atan2(diffVec.y, diffVec.x);
             inputs[0] = Mathf.Sin(angle);
             inputs[1] = Mathf.Cos(angle);
+
+            // Distance
+            inputs[2] = diffVec.magnitude;
+
+            // // Distance
+            // inputs[0] = diffVec.x;
+            // inputs[1] = diffVec.y;
+
+            // Player to Right Goal
+            diffVec = transform.position - rightGoalTransform.position;
+            angle = Mathf.Atan2(diffVec.y, diffVec.x);
+            inputs[3] = Mathf.Sin(angle);
+            inputs[4] = Mathf.Cos(angle);
+
+            // Distance
+            inputs[5] = diffVec.magnitude;
 
             // // Distance
             // inputs[0] = diffVec.x;
@@ -105,8 +121,11 @@ namespace Assets.Scripts
             // Ball to Right Goal
             diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
             angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[2] = Mathf.Sin(angle);
-            inputs[3] = Mathf.Cos(angle);
+            inputs[6] = Mathf.Sin(angle);
+            inputs[7] = Mathf.Cos(angle);
+
+            // Distance
+            inputs[8] = diffVec.magnitude;
 
             // // Distance
             // inputs[2] = diffVec.x;
@@ -168,7 +187,8 @@ namespace Assets.Scripts
             if (collider.CompareTag("Corner"))
             {
                 OnCornerCollisionStay2D?.Invoke(this, null);
-            } else if (collider.CompareTag("RightGoal"))
+            }
+            else if (collider.CompareTag("RightGoal"))
             {
                 OnRightGoalCollisionStay?.Invoke(this, null);
             }

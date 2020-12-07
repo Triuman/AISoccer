@@ -128,13 +128,13 @@ namespace Assets.Scripts
 
             if (touchedRightGoal && shotTheBall)
             {
-                currentFitness += 500;
+                currentFitness += 50;
                 touchedRightGoal = false;
             }
 
             if (shotTheBall && !shotTheBallRewarded)
             {
-                currentFitness += 50;
+                currentFitness += 10;
                 shotTheBallRewarded = true;
             }
 
@@ -146,7 +146,7 @@ namespace Assets.Scripts
 
             if (touchingBall)
             {
-                currentFitness -= 1f;
+                currentFitness -= 0.2f;
                 touchingBall = false;
             }
             // else

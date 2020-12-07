@@ -26,9 +26,9 @@ namespace Assets.Scripts
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         private static float timeScale = 8f;
-        private static readonly int[] layers = new[] { 4, 3 };
+        private static readonly int[] layers = new[] { 9, 18, 3 };
         private static int population = 300;
-        private static double mutationRate = 0.15;
+        private static double mutationRate = 0.2;
         private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
 
         private static int trainingCount = 10; // Each generation will train x many times with random position before generating new generation.
@@ -148,7 +148,12 @@ namespace Assets.Scripts
             MinFitness = Mathf.Infinity;
             MaxFitness = Mathf.NegativeInfinity;
             var newGenerationBrains = new List<FeedForwardNN>();
-            var orderedByFitness = currentGeneration.Where(a => a.fitness != Mathf.NegativeInfinity).OrderByDescending(a => a.fitness);
+            
+            // Turn negative infinities to min fitness in the generation so we can calculate.
+            var minGenFitness = currentGeneration.Where(a => a.fitness != Mathf.NegativeInfinity).Min(a => a.fitness);
+            currentGeneration.ForEach(a => a.fitness = a.fitness == Mathf.NegativeInfinity ? minGenFitness : a.fitness);
+
+            var orderedByFitness = currentGeneration.OrderByDescending(a => a.fitness);
             var listt = orderedByFitness.ToList();
             var selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
             // if(selectedAgents.Count == 0)
@@ -157,7 +162,7 @@ namespace Assets.Scripts
             // Get the elite to the list first
             int eliteCount = (int)Math.Floor(selectedAgents.Count * eliteRatio);
 
-            var minFitness = selectedAgents.Min(a => a.fitness);
+            var minFitness = selectedAgents.Where(a => a.fitness != Mathf.NegativeInfinity).Min(a => a.fitness);
             selectedAgents.ForEach(agent => agent.fitness = agent.fitness - minFitness); // to make all positive numbers
             var fitnessSum = selectedAgents.Sum(a => a.fitness);
             for (int g = 0; g < currentGeneration.Count; g++)
@@ -249,10 +254,10 @@ namespace Assets.Scripts
 
                     for (int w = 0; w < brain.Weights[l].GetLength(1); w++)
                     {
-                        var mutBy = 1 - mutationRate * (random.NextDouble() - 0.5) * 2;
+                        var mutBy = mutationRate * (random.NextDouble() - 0.5) * 2;
                         newBrain.Weights[l][n, w] = brain.Weights[l][n, w] * mutBy;
                     }
-                    var mutByBias = 1 - mutationRate * (random.NextDouble() - 0.5) * 0.5;
+                    var mutByBias = mutationRate * (random.NextDouble() - 0.5) * 0.5;
                     newBrain.Biases[l][n] = brain.Biases[l][n] * mutByBias;
                 }
             }
