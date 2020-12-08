@@ -1,6 +1,7 @@
 ﻿
 using System;
 using UnityEngine;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace Assets.Scripts
 {
@@ -95,7 +96,8 @@ namespace Assets.Scripts
         {
             if (!IsActive)
                 return;
-            Player.ApplyOutput(FeedForwardNN.FeedForward(Brain, inputs));
+            Vector<double>.Build.DenseOfArray(inputs);
+            Player.ApplyOutput(FeedForwardNN.FeedForward(Brain, Vector<double>.Build.DenseOfArray(inputs)).AsArray());
             CalculateFitness();
             //Debug.Log(fitness);
         }

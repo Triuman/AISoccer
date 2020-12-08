@@ -1,18 +1,20 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+// using System.Numerics.Tensors;
+// using MathNet.Numerics.LinearAlgebra;
+// using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Assets.Scripts
 {
 
     public class AttentiveBrain
     {
-        public FeedForwardNN[,] linears; // 3 FFNN(no hidden layer) for Q,K,V x N times
-        public FeedForwardNN linear; // 1 FFNN(no hidden layer) after concat
-        public FeedForwardNN reLu1; // 1 FFNN(arbitrary number of hidden layers)
-        public FeedForwardNN reLu2; // 1 FFNN(arbitrary number of hidden layers) at the end
+        public FeedForwardNNOld[,] linears; // 3 FFNN(no hidden layer) for Q,K,V x N times
+        public FeedForwardNNOld linear; // 1 FFNN(no hidden layer) after concat
+        public FeedForwardNNOld reLu1; // 1 FFNN(arbitrary number of hidden layers)
+        public FeedForwardNNOld reLu2; // 1 FFNN(arbitrary number of hidden layers) at the end
 
-        public AttentiveBrain(FeedForwardNN[,] linears, FeedForwardNN linear, FeedForwardNN reLu1, FeedForwardNN reLu2)
+        public AttentiveBrain(FeedForwardNNOld[,] linears, FeedForwardNNOld linear, FeedForwardNNOld reLu1, FeedForwardNNOld reLu2)
         {
             Debug.Assert(linears.GetLength(1) == 3);
             Debug.Assert(linear.Layers.GetLength(0) == 2);
@@ -32,7 +34,11 @@ namespace Assets.Scripts
 
         public AttentionTriML()
         {
+            // var denseTensor = new DenseTensor<int>(new[] { 3, 5 });
+            // var asd = denseTensor[1, 4];
 
+            // var m = new DenseMatrix(3);
+            
         }
 
         const int sizeOfDouble = 8;
@@ -47,42 +53,45 @@ namespace Assets.Scripts
         {
             int inputCount = inputs.GetLength(0);
             int inputSize = inputs.GetLength(1);
-            double[,] attentions = new double[inputCount, inputSize];
+            double[][,] attentions = new double[attentiveBrain.linears.GetLength(0)][,];
             for (int l = 0; l < attentiveBrain.linears.GetLength(0); l++)
             {
                 var linearQ = attentiveBrain.linears[l, 0];
                 var linearK = attentiveBrain.linears[l, 1];
                 var linearV = attentiveBrain.linears[l, 2];
-                double[,] Q = new double[inputCount, inputSize];
-                double[,] K = new double[inputCount, inputSize];
-                double[,] V = new double[inputCount, inputSize];
+                double[,] Q = new double[inputCount, linearQ.Layers[linearQ.Layers.Length - 1]];
+                double[,] K = new double[inputCount, linearK.Layers[linearK.Layers.Length - 1]];
+                double[,] V = new double[inputCount, linearV.Layers[linearV.Layers.Length - 1]];
                 for (int i = 0; i < inputCount; i++)
                 {
                     double[] input = new double[inputSize];
                     Buffer.BlockCopy(inputs, i * inputSize * sizeOfDouble, input, 0, inputSize * sizeOfDouble);
-                    var q = FeedForwardNN.FeedForward(linearQ, input);
+                    var q = FeedForwardNNOld.FeedForward(linearQ, input);
                     for (int iq = 0; iq < q.Length; iq++)
                     {
                         Q[i, iq] = q[iq];
                     }
-                    var k = FeedForwardNN.FeedForward(linearK, input);
+                    var k = FeedForwardNNOld.FeedForward(linearK, input);
                     for (int ik = 0; ik < k.Length; ik++)
                     {
                         K[i, ik] = k[ik];
                     }
-                    var v = FeedForwardNN.FeedForward(linearV, input);
+                    var v = FeedForwardNNOld.FeedForward(linearV, input);
                     for (int iv = 0; iv < v.Length; iv++)
                     {
                         V[i, iv] = v[iv];
                     }
                 }
-                var matmulQK = Matrix.multiply(Q, K); // dim: inputCount x inputCount
-                var softmaxQK = matmulQK;
-                for (int m = 0; m < inputSize; m++)
-                {
-                    // var softmaxResult = Matrix.softmax();
-                }
+                var matmulQK = MatrixOld.multiply(Q, K); // dim: inputCount x inputCount
+                var sqrtDim = Math.Sqrt(Q.GetLength(1));
+                // var scaled = Matrix.divide(matmulQK, sqrtDim);
+                // var softmaxQK = Matrix.softmax(scaled);
+                // var Z = Matrix.matmul(softmaxQK, V);
+                // attentions[l] = Z;
             }
+
+            // double[,] attentionsConcat = Matrix.concat(attentions);
+            // var output = FeedForwardNN.FeedForward(attentiveBrain.reLu1, attentionsConcat);
 
         }
 

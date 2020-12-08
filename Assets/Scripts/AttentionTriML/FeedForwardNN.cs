@@ -1,4 +1,6 @@
 ﻿using System;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Assets.Scripts
 {
@@ -9,63 +11,44 @@ namespace Assets.Scripts
         public FeedForwardNN(int[] layers)
         {
             Layers = layers;
-            Weights = new double[layers.Length - 1][,];
-            Biases = new double[layers.Length - 1][];
+            Weights = new Matrix<double>[layers.Length - 1];
+            Biases = new Vector<double>[layers.Length - 1];
 
             for (int i = 0; i < layers.Length - 1; i++)
             {
-                Weights[i] = new double[layers[i+1], layers[i]];
-                Biases[i] = new double[layers[i+1]];
-
-                for (int a = 0; a < layers[i+1]; a++)
-                {
-                    for (int b = 0; b < layers[i]; b++)
-                    {
-                        Weights[i][a, b] = GetRandomWeight;
-                    }
-                    Biases[i][a] = GetRandomBias;
-                }
+                Weights[i] = Matrix<double>.Build.Random(layers[i+1], layers[i]);
+                Biases[i] = Vector<double>.Build.Random(layers[i+1]);
             }
         }
 
         public int[] Layers { get; private set; }
 
-        public double[][,] Weights { get; set; }
-        public double[][] Biases { get; set; }
+        public Matrix<double>[] Weights { get; set; }
+        public Vector<double>[] Biases { get; set; }
 
         public static double GetRandomWeight => random.NextDouble() * 2 - 1f;
         public static double GetRandomBias => random.NextDouble() * 2 - 1f;
 
-        public static double[] FeedForward(FeedForwardNN nn, double[] inputs)
+        public static Vector<double> FeedForward(FeedForwardNN nn, Vector<double> inputs)
         {
             return FeedForward(inputs, nn.Weights, nn.Biases, 0);
         }
-        public static double[] FeedForward(double[] inputs, double [][,] weights, double [][] biases, int layer)
+        public static Vector<double> FeedForward(Vector<double> inputs, Matrix<double>[] weights, Vector<double>[] biases, int layer)
         {
+            var output = Tanh(weights[layer].Multiply(inputs).Add(biases[layer]));
             if (layer == biases.Length - 1)
-                return Tanh(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer]));
-            return FeedForward(Tanh(Matrix.add(Matrix.multiply(weights[layer], inputs), biases[layer])), weights, biases, layer + 1);
+                return output;
+            return FeedForward(output, weights, biases, layer + 1);
         }
 
-        public static double[] Tanh(double[] X)
+        public static Vector<double> Tanh(Vector<double> X)
         {
-            var result = new double[X.Length];
-            for (int i = 0; i < X.Length; i++)
-            {
-                result[i] = Math.Tanh(X[i]);
-            }
-            return result;
+            return X.Map<double>(x => Math.Tanh(x));
         }
 
-
-        public static double[] Sigmoid(double[] X)
+        public static Vector<double> Sigmoid(Vector<double> X)
         {
-            var result = new double[X.Length];
-            for (int i = 0; i < X.Length; i++)
-            {
-                result[i] = 1.0 / (1.0 + Math.Exp(-X[i]));
-            }
-            return result;
+            return X.Map<double>(x =>  Sigmoid(x));
         }
         public static double Sigmoid(double x)
         {
@@ -76,7 +59,7 @@ namespace Assets.Scripts
         {
             if (x < -45.0) return 0.0;
             else if (x > 45.0) return 1.0;
-            else return 1.0 / (1.0 + Math.Exp(-x));
+            else return Sigmoid(x);
         }
 
         public static double HyperbolicTangtent(double x)

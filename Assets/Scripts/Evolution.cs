@@ -241,25 +241,25 @@ namespace Assets.Scripts
         }
 
 
-        private static FeedForwardNN crossover(FeedForwardNN[] parents)
-        {
-            var newBrain = new FeedForwardNN(parents[0].Layers);
+        // private static FeedForwardNN crossover(FeedForwardNN[] parents)
+        // {
+        //     var newBrain = new FeedForwardNN(parents[0].Layers);
 
-            for (int l = 0; l < parents[0].Weights.Length; l++)
-            {
-                for (int n = 0; n < parents[0].Weights[l].GetLength(0); n++)
-                {
-                    int parentIndex = random.Next(parents.Length);
-                    for (int w = 0; w < parents[0].Weights[l].GetLength(1); w++)
-                    {
-                        Debug.Log(parentIndex);
-                        newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? FeedForwardNN.GetRandomWeight : parents[parentIndex].Weights[l][n, w];
-                    }
-                    newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? FeedForwardNN.GetRandomBias : parents[parentIndex].Biases[l][n];
-                }
-            }
-            return newBrain;
-        }
+        //     for (int l = 0; l < parents[0].Weights.Length; l++)
+        //     {
+        //         for (int n = 0; n < parents[0].Weights[l].GetLength(0); n++)
+        //         {
+        //             int parentIndex = random.Next(parents.Length);
+        //             for (int w = 0; w < parents[0].Weights[l].GetLength(1); w++)
+        //             {
+        //                 Debug.Log(parentIndex);
+        //                 newBrain.Weights[l][n, w] = random.NextDouble() > mutationRate ? FeedForwardNN.GetRandomWeight : parents[parentIndex].Weights[l][n, w];
+        //             }
+        //             newBrain.Biases[l][n] = random.NextDouble() > mutationRate ? FeedForwardNN.GetRandomBias : parents[parentIndex].Biases[l][n];
+        //         }
+        //     }
+        //     return newBrain;
+        // }
 
 
         private static FeedForwardNN mutate(FeedForwardNN brain)
@@ -270,10 +270,9 @@ namespace Assets.Scripts
 
             for (int l = 0; l < brain.Weights.Length; l++)
             {
-                for (int n = 0; n < brain.Weights[l].GetLength(0); n++)
+                for (int n = 0; n < brain.Weights[l].RowCount; n++)
                 {
-
-                    for (int w = 0; w < brain.Weights[l].GetLength(1); w++)
+                    for (int w = 0; w < brain.Weights[l].ColumnCount; w++)
                     {
                         var mutBy = mutationRate * (random.NextDouble() - 0.5) * 2;
                         newBrain.Weights[l][n, w] = brain.Weights[l][n, w] * mutBy;
