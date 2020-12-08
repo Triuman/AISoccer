@@ -82,6 +82,12 @@ namespace Assets.Scripts
                 }
             }
         }
+        private void LateUpdate()
+        {
+            currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
+            currentGeneration.Take(10).ToList().ForEach(a => a.EnableRenderer(true));
+            currentGeneration.GetRange(10, currentGeneration.Count - 10).ToList().ForEach(a => a.EnableRenderer(false));
+        }
 
         private void StartSimulation()
         {

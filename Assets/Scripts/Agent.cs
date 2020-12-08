@@ -72,8 +72,6 @@ namespace Assets.Scripts
             Player.OnBallCollisionEnter += Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D += Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D += Player_OnCornerCollisionStay2D;
-            // Player.ballCollider.gameObject.SetActive(true);
-            // Player.gameObject.SetActive(true);
             Player.UpdateColor();
             IsActive = true;
         }
@@ -89,8 +87,6 @@ namespace Assets.Scripts
             Player.OnBallCollisionEnter -= Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D -= Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D -= Player_OnCornerCollisionStay2D;
-            // Player.ballCollider.gameObject.SetActive(false);
-            // Player.gameObject.SetActive(false);
             Player.HideYourself();
             IsActive = false;
         }
@@ -122,13 +118,6 @@ namespace Assets.Scripts
             {
                 var fitnessByDis = Mathf.Pow(Mathf.Lerp(1, 0, Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position) / Vector2.Distance(BallInitialPosition, RightGoalPosition)), 2);
                 currentFitness += fitnessByDis * (shotTheBall ? 1 : 0.5f);
-                // Debug.Log(fitnessByDis);
-
-                // currentFitness += 0.2f;
-                // var distanceBallToRightGoal = Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position);
-                // var distanceFitnessRatio = 1f - 1 / (float)(1 + Math.Pow(Math.E, -distanceBallToRightGoal + 5)); // This gives a number between +0.5 and -0.5 using sigmoid.
-                // currentFitness += Mathf.Max(distanceFitnessRatio * 0.5f, 0) * 5;
-                // Debug.Log(currentFitness);
             }
 
             if (touchedRightGoal && shotTheBall)
@@ -143,31 +132,20 @@ namespace Assets.Scripts
                 shotTheBallRewarded = true;
             }
 
-            if (touchingRightGoal)
+            if (touchingRightGoal && shotTheBall)
             {
                 currentFitness += 0.1f;
                 touchingRightGoal = false;
             }
 
-            if (touchingBall)
+            if (touchingBall && shotTheBall)
             {
                 currentFitness += 0.2f;
                 touchingBall = false;
             }
-            // else
-            // {
-            //     currentFitness -= 0.2f;
-            //     Player.HideYourself();
-            // }
 
             // if (touchingCorner)
             //     currentFitness -= 0.6f;
-
-            // if (currentFitness > 0)
-            //     Player.ShowYourself();
-            // else
-            //     Player.HideYourself();
-
 
             // // If the ball got further from the goal, we count it as no achievement.
             // if (Vector2.Distance(BallInitialPosition, RightGoalPosition) < Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position)){
@@ -175,24 +153,13 @@ namespace Assets.Scripts
             //     fitnessCanIncrease = false;
             // }
 
+
             if (!fitnessCanIncrease)
                 return;
             fitness += currentFitness;
-            // Debug.Log(fitness + "  -  " + currentFitness);
 
-            if (Evolution.MaxFitness <= fitness)
-            {
-                Evolution.MaxFitness = fitness;
-            }
-            if (Evolution.MinFitness >= fitness)
-            {
-                Evolution.MinFitness = fitness;
-            }
             if (shotTheBall)
                 Player.UpdateColor((fitness - Evolution.MinFitness) / (Evolution.MaxFitness - Evolution.MinFitness));
-
-            // touchingBall = false;
-            // touchingCorner = false;
         }
 
 
@@ -227,7 +194,7 @@ namespace Assets.Scripts
                 return;
             Player.OnBallCollisionEnter -= Player_OnBallCollisionEnter;
             touchedBall = true;
-            fitness = fitness == Mathf.NegativeInfinity ? 0 : fitness;
+            fitness = fitness == Mathf.NegativeInfinity ? 10 : fitness;
             fitnessCanIncrease = true;
         }
 
