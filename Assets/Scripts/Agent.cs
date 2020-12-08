@@ -55,7 +55,6 @@ namespace Assets.Scripts
             touchingRightGoal = false;
             touchedBall = false;
             touchingCorner = false;
-            Player.HideYourself();
             Player.Reset(playerPos);
             BallInitialPosition = Player.ballInitialPosition;
         }
@@ -73,6 +72,9 @@ namespace Assets.Scripts
             Player.OnBallCollisionEnter += Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D += Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D += Player_OnCornerCollisionStay2D;
+            // Player.ballCollider.gameObject.SetActive(true);
+            // Player.gameObject.SetActive(true);
+            Player.UpdateColor();
             IsActive = true;
         }
 
@@ -87,6 +89,9 @@ namespace Assets.Scripts
             Player.OnBallCollisionEnter -= Player_OnBallCollisionEnter;
             Player.OnBallCollisionStay2D -= Player_OnBallCollisionStay2D;
             Player.OnCornerCollisionStay2D -= Player_OnCornerCollisionStay2D;
+            // Player.ballCollider.gameObject.SetActive(false);
+            // Player.gameObject.SetActive(false);
+            Player.HideYourself();
             IsActive = false;
         }
 
@@ -140,13 +145,13 @@ namespace Assets.Scripts
 
             if (touchingRightGoal)
             {
-                currentFitness += 1f;
+                currentFitness += 0.1f;
                 touchingRightGoal = false;
             }
 
             if (touchingBall)
             {
-                currentFitness -= 0.2f;
+                currentFitness += 0.2f;
                 touchingBall = false;
             }
             // else

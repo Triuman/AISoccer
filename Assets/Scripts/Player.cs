@@ -90,7 +90,7 @@ namespace Assets.Scripts
         {
             // 0,1: direction of the ball
             // 8: distance to the ball
-            double[] inputs = new double[9];
+            double[] inputs = new double[6];
 
             // Player to Ball
             var diffVec = transform.position - ballRigidbody.transform.position;
@@ -98,8 +98,8 @@ namespace Assets.Scripts
             inputs[0] = Mathf.Sin(angle);
             inputs[1] = Mathf.Cos(angle);
 
-            // Distance
-            inputs[2] = diffVec.magnitude;
+            // // Distance
+            // inputs[2] = diffVec.magnitude;
 
             // // Distance
             // inputs[0] = diffVec.x;
@@ -108,11 +108,11 @@ namespace Assets.Scripts
             // Player to Right Goal
             diffVec = transform.position - rightGoalTransform.position;
             angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[3] = Mathf.Sin(angle);
-            inputs[4] = Mathf.Cos(angle);
+            inputs[2] = Mathf.Sin(angle);
+            inputs[3] = Mathf.Cos(angle);
 
-            // Distance
-            inputs[5] = diffVec.magnitude;
+            // // Distance
+            // inputs[5] = diffVec.magnitude;
 
             // // Distance
             // inputs[0] = diffVec.x;
@@ -121,11 +121,11 @@ namespace Assets.Scripts
             // Ball to Right Goal
             diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
             angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[6] = Mathf.Sin(angle);
-            inputs[7] = Mathf.Cos(angle);
+            inputs[4] = Mathf.Sin(angle);
+            inputs[5] = Mathf.Cos(angle);
 
-            // Distance
-            inputs[8] = diffVec.magnitude;
+            // // Distance
+            // inputs[8] = diffVec.magnitude;
 
             // // Distance
             // inputs[2] = diffVec.x;
@@ -194,19 +194,27 @@ namespace Assets.Scripts
             }
         }
 
-        public void ShowYourself()
-        {
-            GetComponent<Renderer>().material.SetColor("BodyColor", Color.white);
-        }
-
         public void HideYourself()
         {
-            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(58, 180, 58, 255));
+            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(0, 0, 0, 0));
+            ballCollider.GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(0, 0, 0, 0));
         }
-        public void UpdateColor(float fitnessRatio)
+
+        public void UpdateColor(float? fitnessRatio = null)
         {
-            byte color = (byte)Math.Ceiling(Mathf.Min(Mathf.Max(fitnessRatio * 255, 0), 255));
-            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(color, color, color, 255));
+            Color32 color;
+            if (fitnessRatio == null)
+            {
+                // default color
+                color = new Color32(58, 180, 58, 255);
+                ballCollider.GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(200, 20, 20, 255));
+            }
+            else
+            {
+                byte colorValue = (byte)Math.Ceiling(Mathf.Min(Mathf.Max((float)fitnessRatio * 255, 0), 255));
+                color = new Color32(colorValue, colorValue, colorValue, 255);
+            }
+            GetComponent<Renderer>().material.SetColor("BodyColor", color);
         }
     }
 }

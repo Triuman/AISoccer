@@ -26,12 +26,13 @@ namespace Assets.Scripts
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         private static float timeScale = 8f;
-        private static readonly int[] layers = new[] { 9, 18, 3 };
+        private static readonly int[] layers = new[] { 6, 10, 3 };
         private static int population = 300;
-        private static double mutationRate = 0.2;
-        private static float eliteRatio = 0.1f;     //the number of best agents who go to next generation unchanged.
+        private static double mutationRate = 0.3;
+        private static float eliteRatio = 0.1f; //the number of best agents who go to next generation unchanged.
+        private static float newAgentsRatio = 0.1f; //the number of randomly generated agents each generation.
 
-        private static int trainingCount = 10; // Each generation will train x many times with random position before generating new generation.
+        private static int trainingCount = 5; // Each generation will train x many times with random position before generating new generation.
 
         private static int generationNo = 0;
         private static int trainingNo = 0;
@@ -147,38 +148,52 @@ namespace Assets.Scripts
             trainingNo = 0;
             MinFitness = Mathf.Infinity;
             MaxFitness = Mathf.NegativeInfinity;
-            var newGenerationBrains = new List<FeedForwardNN>();
-            
+
             // Turn negative infinities to min fitness in the generation so we can calculate.
             var minGenFitness = currentGeneration.Where(a => a.fitness != Mathf.NegativeInfinity).Min(a => a.fitness);
-            currentGeneration.ForEach(a => a.fitness = a.fitness == Mathf.NegativeInfinity ? minGenFitness : a.fitness);
+            // currentGeneration.ForEach(a => a.fitness = a.fitness == Mathf.NegativeInfinity ? minGenFitness - 1000 : a.fitness);
 
             var orderedByFitness = currentGeneration.OrderByDescending(a => a.fitness);
-            var listt = orderedByFitness.ToList();
-            var selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
-            // if(selectedAgents.Count == 0)
-            // selectedAgents = orderedByFitness.Take((int)Math.Floor(population * 0.5f)).ToList();
+            // var listt = orderedByFitness.ToList(); // just to debug
+            var selectedAgents = orderedByFitness.Take((int)Math.Floor(currentGeneration.Count * 0.4f)).ToList();
             //SampleAgent.Brain = selectedAgents[0].Brain;
+
             // Get the elite to the list first
             int eliteCount = (int)Math.Floor(selectedAgents.Count * eliteRatio);
+            // And new comers
+            int newAgentsCount = (int)Math.Floor(selectedAgents.Count * newAgentsRatio);
 
-            var minFitness = selectedAgents.Where(a => a.fitness != Mathf.NegativeInfinity).Min(a => a.fitness);
-            selectedAgents.ForEach(agent => agent.fitness = agent.fitness - minFitness); // to make all positive numbers
-            var fitnessSum = selectedAgents.Sum(a => a.fitness);
-            for (int g = 0; g < currentGeneration.Count; g++)
+
+            var newGenerationBrains = new List<FeedForwardNN>();
+
+            for (int g = 0; g < eliteCount; g++)
             {
-                FeedForwardNN childBrain = null;
-                if (g < eliteCount && g < selectedAgents.Count)
+                newGenerationBrains.Add(selectedAgents[g].Brain);
+            }
+
+            for (int n = 0; n < newAgentsCount; n++)
+            {
+                newGenerationBrains.Add(new FeedForwardNN(layers));
+            }
+
+            var remainingCount = (float)population - eliteCount - newAgentsCount;
+            var countOfBestAgent = (remainingCount / selectedAgents.Count * 2 - 1);
+            float selectiveRatio = countOfBestAgent / remainingCount; // for linear distribution
+            for (int s = 0; s < selectedAgents.Count; s++)
+            {
+                int agentCount = Mathf.CeilToInt(selectiveRatio * (selectedAgents.Count - s));
+                for (int a = 0; a < agentCount; a++)
                 {
-                    childBrain = selectedAgents[g].Brain;
-                }
-                else
-                {
-                    var parent1 = SelectRandomlyByFitness(selectedAgents, fitnessSum, minFitness);
+                    var parent1 = selectedAgents[s].Brain;
                     //var parent2 = SelectRandomlyByFitness(fitnessSum, minFitness);
-                    childBrain = mutate(parent1);
+                    FeedForwardNN childBrain = mutate(parent1);
+                    newGenerationBrains.Add(childBrain);
                 }
-                newGenerationBrains.Add(childBrain);
+            }
+
+            for (int v = 0; v < newGenerationBrains.Count - currentGeneration.Count; v++)
+            {
+                currentGeneration.Add(new Agent(new FeedForwardNN(layers), Instantiate(PlayerPrefab), RightGoalTransform));
             }
 
             for (int b = 0; b < newGenerationBrains.Count; b++)
