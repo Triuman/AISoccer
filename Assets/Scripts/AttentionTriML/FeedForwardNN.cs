@@ -1,44 +1,100 @@
 ﻿using System;
+using System.Collections;
 using MathNet.Numerics.LinearAlgebra;
-using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace Assets.Scripts
 {
+
+    public enum EnmActivations
+    {
+        LRelu,
+        Sigmoid
+    }
+
+
+    public class LayerDefinition
+    {
+        public int NodeCount { get; }
+        public EnmActivations Activation { get; }
+
+        public LayerDefinition(int nodeCount, EnmActivations activation)
+        {
+            NodeCount = nodeCount;
+            Activation = activation;
+        }
+    }
+
+    public class Layer
+    {
+        public int NodeCount;
+        public EnmActivations Activation;
+        public Matrix<double> Weights;
+        public Vector<double> Biases;
+
+        public Layer(LayerDefinition layerDefinition, Matrix<double> weights = null, Vector<double> biases = null)
+        {
+            NodeCount = layerDefinition.NodeCount;
+            Activation = layerDefinition.Activation;
+            Weights = weights;
+            Biases = biases;
+        }
+    }
+
     public class FeedForwardNN
     {
         static Random random = new Random(Guid.NewGuid().GetHashCode());
 
-        public FeedForwardNN(int[] layers)
+        public FeedForwardNN(LayerDefinition[] layerDefinitions)
         {
-            Layers = layers;
-            Weights = new Matrix<double>[layers.Length - 1];
-            Biases = new Vector<double>[layers.Length - 1];
-
-            for (int i = 0; i < layers.Length - 1; i++)
+            Init(layerDefinitions);
+        }
+        public FeedForwardNN(Layer[] layers)
+        {
+            LayerDefinition[] layerDefinitions = new LayerDefinition[layers.Length];
+            for (int i = 0; i < layers.Length; i++)
             {
-                Weights[i] = Matrix<double>.Build.Random(layers[i+1], layers[i]);
-                Biases[i] = Vector<double>.Build.Random(layers[i+1]);
+                layerDefinitions[i] = new LayerDefinition(layers[i].NodeCount, layers[i].Activation);
+            }
+            Init(layerDefinitions);
+        }
+
+        private void Init(LayerDefinition[] layerDefinitions)
+        {
+            Layers = new Layer[layerDefinitions.Length];
+            Layers[0] = new Layer(layerDefinitions[0]);
+            for (int i = 1; i < layerDefinitions.Length; i++)
+            {
+                var weights = Matrix<double>.Build.Random(layerDefinitions[i].NodeCount, layerDefinitions[i - 1].NodeCount);
+                var biases = Vector<double>.Build.Random(layerDefinitions[i].NodeCount);
+                Layers[i] = new Layer(layerDefinitions[i], weights, biases);
             }
         }
 
-        public int[] Layers { get; private set; }
-
-        public Matrix<double>[] Weights { get; set; }
-        public Vector<double>[] Biases { get; set; }
+        public Layer[] Layers { get; private set; }
 
         public static double GetRandomWeight => random.NextDouble() * 2 - 1f;
         public static double GetRandomBias => random.NextDouble() * 2 - 1f;
 
         public static Vector<double> FeedForward(FeedForwardNN nn, Vector<double> inputs)
         {
-            return FeedForward(inputs, nn.Weights, nn.Biases, 0);
+            return FeedForward(inputs, nn.Layers, 1);
         }
-        public static Vector<double> FeedForward(Vector<double> inputs, Matrix<double>[] weights, Vector<double>[] biases, int layer)
+        public static Vector<double> FeedForward(Vector<double> inputs, Layer[] layers, int layerIndex)
         {
-            var output = Tanh(weights[layer].Multiply(inputs).Add(biases[layer]));
-            if (layer == biases.Length - 1)
+            var output = Activate(layers[layerIndex].Weights.Multiply(inputs).Add(layers[layerIndex].Biases), layers[layerIndex].Activation);
+            if (layerIndex == layers.Length - 1)
                 return output;
-            return FeedForward(output, weights, biases, layer + 1);
+            return FeedForward(output, layers, layerIndex + 1);
+        }
+
+        public static Vector<double> Activate(Vector<double> X, EnmActivations activation)
+        {
+            switch (activation)
+            {
+                default:
+                case EnmActivations.LRelu:
+                    return Activations.LeakyReLU(X, 0.2);
+            }
         }
 
         public static Vector<double> Tanh(Vector<double> X)
@@ -48,7 +104,7 @@ namespace Assets.Scripts
 
         public static Vector<double> Sigmoid(Vector<double> X)
         {
-            return X.Map<double>(x =>  Sigmoid(x));
+            return X.Map<double>(x => Sigmoid(x));
         }
         public static double Sigmoid(double x)
         {

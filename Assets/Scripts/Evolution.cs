@@ -26,7 +26,7 @@ namespace Assets.Scripts
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
         private static float timeScale = 8f;
-        private static readonly int[] layers = new[] { 6, 10, 3 };
+        private static LayerDefinition[] layerDefinitions;
         private static int population = 300;
         private static double mutationRate = 0.3;
         private static float eliteRatio = 0.1f; //the number of best agents who go to next generation unchanged.
@@ -63,6 +63,11 @@ namespace Assets.Scripts
             // SampleAgent.Activate();
 
 
+            layerDefinitions = new LayerDefinition[3];
+            layerDefinitions[0] = new LayerDefinition(6, EnmActivations.LRelu);
+            layerDefinitions[1] = new LayerDefinition(10, EnmActivations.LRelu);
+            layerDefinitions[2] = new LayerDefinition(3, EnmActivations.LRelu);
+  
             Time.timeScale = timeScale;
 
             InitGeneration();
@@ -85,8 +90,8 @@ namespace Assets.Scripts
         private void LateUpdate()
         {
             currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
-            currentGeneration.Take(10).ToList().ForEach(a => a.EnableRenderer(true));
-            currentGeneration.GetRange(10, currentGeneration.Count - 10).ToList().ForEach(a => a.EnableRenderer(false));
+            currentGeneration.Take(Mathf.CeilToInt(currentGeneration.Count * 0.1f)).ToList().ForEach(a => a.EnableRenderer(true));
+            currentGeneration.GetRange(Mathf.CeilToInt(currentGeneration.Count * 0.1f), Mathf.CeilToInt(currentGeneration.Count * 0.9f)).ToList().ForEach(a => a.EnableRenderer(false));
         }
 
         private void StartSimulation()
@@ -124,7 +129,7 @@ namespace Assets.Scripts
             for (int a = 0; a < population; a++)
             {
                 PlayerPrefab.transform.position = GetRandomPosition();
-                currentGeneration.Add(new Agent(new FeedForwardNN(layers), Instantiate(PlayerPrefab), RightGoalTransform));
+                currentGeneration.Add(new Agent(new FeedForwardNN(layerDefinitions), Instantiate(PlayerPrefab), RightGoalTransform));
             }
 
             for (int i = 0; i < currentGeneration.Count; i++)
@@ -179,7 +184,7 @@ namespace Assets.Scripts
 
             for (int n = 0; n < newAgentsCount; n++)
             {
-                newGenerationBrains.Add(new FeedForwardNN(layers));
+                newGenerationBrains.Add(new FeedForwardNN(layerDefinitions));
             }
 
             var remainingCount = (float)population - eliteCount - newAgentsCount;
@@ -199,7 +204,7 @@ namespace Assets.Scripts
 
             for (int v = 0; v < newGenerationBrains.Count - currentGeneration.Count; v++)
             {
-                currentGeneration.Add(new Agent(new FeedForwardNN(layers), Instantiate(PlayerPrefab), RightGoalTransform));
+                currentGeneration.Add(new Agent(new FeedForwardNN(layerDefinitions), Instantiate(PlayerPrefab), RightGoalTransform));
             }
 
             for (int b = 0; b < newGenerationBrains.Count; b++)
@@ -268,17 +273,17 @@ namespace Assets.Scripts
             //return brain;
             var newBrain = new FeedForwardNN(brain.Layers);
 
-            for (int l = 0; l < brain.Weights.Length; l++)
+            for (int l = 1; l < brain.Layers.Length; l++)
             {
-                for (int n = 0; n < brain.Weights[l].RowCount; n++)
+                for (int n = 0; n < brain.Layers[l].NodeCount; n++)
                 {
-                    for (int w = 0; w < brain.Weights[l].ColumnCount; w++)
+                    for (int w = 0; w < brain.Layers[l].Weights.ColumnCount; w++)
                     {
                         var mutBy = mutationRate * (random.NextDouble() - 0.5) * 2;
-                        newBrain.Weights[l][n, w] = brain.Weights[l][n, w] * mutBy;
+                        newBrain.Layers[l].Weights[n, w] = brain.Layers[l].Weights[n, w] * mutBy;
                     }
                     var mutByBias = mutationRate * (random.NextDouble() - 0.5) * 0.5;
-                    newBrain.Biases[l][n] = brain.Biases[l][n] * mutByBias;
+                    newBrain.Layers[l].Biases[n] = brain.Layers[l].Biases[n] * mutByBias;
                 }
             }
             return newBrain;

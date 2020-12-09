@@ -136,6 +136,8 @@ namespace Assets.Scripts
 
         public void ApplyOutput(double[] output)
         {
+            if(output.Length != 3)
+                throw new Exception("Output length is not 3.");
             // return;
             // 0: acc x
             // 1: acc y
