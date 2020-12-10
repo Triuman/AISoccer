@@ -62,11 +62,11 @@ namespace Assets.Scripts
             // // SampleAgent.isSample = true;
             // SampleAgent.Activate();
 
-
-            layerDefinitions = new LayerDefinition[3];
-            layerDefinitions[0] = new LayerDefinition(6, EnmActivations.LRelu);
-            layerDefinitions[1] = new LayerDefinition(10, EnmActivations.LRelu);
-            layerDefinitions[2] = new LayerDefinition(3, EnmActivations.LRelu);
+            layerDefinitions = new LayerDefinition[] {
+                new LayerDefinition(6, EnmActivations.None),
+                new LayerDefinition(10, EnmActivations.LRelu),
+                new LayerDefinition(3, EnmActivations.LRelu)
+            };
   
             Time.timeScale = timeScale;
 
@@ -89,9 +89,9 @@ namespace Assets.Scripts
         }
         private void LateUpdate()
         {
-            currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
-            currentGeneration.Take(Mathf.CeilToInt(currentGeneration.Count * 0.1f)).ToList().ForEach(a => a.EnableRenderer(true));
-            currentGeneration.GetRange(Mathf.CeilToInt(currentGeneration.Count * 0.1f), Mathf.CeilToInt(currentGeneration.Count * 0.9f)).ToList().ForEach(a => a.EnableRenderer(false));
+            // currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
+            // currentGeneration.Take(Mathf.CeilToInt(currentGeneration.Count * 0.1f)).ToList().ForEach(a => a.EnableRenderer(true));
+            // currentGeneration.GetRange(Mathf.CeilToInt(currentGeneration.Count * 0.1f), Mathf.CeilToInt(currentGeneration.Count * 0.9f)).ToList().ForEach(a => a.EnableRenderer(false));
         }
 
         private void StartSimulation()

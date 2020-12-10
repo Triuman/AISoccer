@@ -1,6 +1,8 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 namespace Assets.Scripts
 {
@@ -81,7 +83,13 @@ namespace Assets.Scripts
         void FixedUpdate()
         {
             if (OnInput != null)
-                OnInput.Invoke(this, PrepareInputs());
+            {
+                // var aaa = Time.realtimeSinceStartup;
+                // Debug.Log((Time.realtimeSinceStartup - aaa) / 1000);
+                var inputs = PrepareInputs();
+                OnInput.Invoke(this, inputs);
+            }
+
             rigidbody.AddForce(moveVector * Speed * Time.deltaTime);
         }
 
@@ -136,7 +144,7 @@ namespace Assets.Scripts
 
         public void ApplyOutput(double[] output)
         {
-            if(output.Length != 3)
+            if (output.Length != 3)
                 throw new Exception("Output length is not 3.");
             // return;
             // 0: acc x

@@ -96,6 +96,7 @@ namespace Assets.Scripts
         {
             if (!IsActive)
                 return;
+                
             Vector<double>.Build.DenseOfArray(inputs);
             Player.ApplyOutput(FeedForwardNN.FeedForward(Brain, Vector<double>.Build.DenseOfArray(inputs)).AsArray());
             CalculateFitness();

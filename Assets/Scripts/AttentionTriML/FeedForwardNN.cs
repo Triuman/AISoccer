@@ -7,6 +7,7 @@ namespace Assets.Scripts
 
     public enum EnmActivations
     {
+        None,
         LRelu,
         Sigmoid
     }
@@ -94,36 +95,11 @@ namespace Assets.Scripts
                 default:
                 case EnmActivations.LRelu:
                     return Activations.LeakyReLU(X, 0.2);
+                case EnmActivations.Sigmoid:
+                    return Activations.Sigmoid(X);
             }
         }
 
-        public static Vector<double> Tanh(Vector<double> X)
-        {
-            return X.Map<double>(x => Math.Tanh(x));
-        }
-
-        public static Vector<double> Sigmoid(Vector<double> X)
-        {
-            return X.Map<double>(x => Sigmoid(x));
-        }
-        public static double Sigmoid(double x)
-        {
-            return 1.0 / (1.0 + Math.Exp(-x));
-        }
-
-        public static double LogSigmoid(double x)
-        {
-            if (x < -45.0) return 0.0;
-            else if (x > 45.0) return 1.0;
-            else return Sigmoid(x);
-        }
-
-        public static double HyperbolicTangtent(double x)
-        {
-            if (x < -45.0) return -1.0;
-            else if (x > 45.0) return 1.0;
-            else return Math.Tanh(x);
-        }
     }
 
 }
