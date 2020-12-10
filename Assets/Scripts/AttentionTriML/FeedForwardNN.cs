@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using MathNet.Numerics.LinearAlgebra;
 
 namespace Assets.Scripts
@@ -69,6 +68,27 @@ namespace Assets.Scripts
                 var biases = Vector<double>.Build.Random(layerDefinitions[i].NodeCount);
                 Layers[i] = new Layer(layerDefinitions[i], weights, biases);
             }
+
+            
+            // Not the best solution. Init this somewhere else.
+            if (layerTempVectors1 == null)
+            {
+                layerTempVectors1 = new Vector<double>[Layers.Length - 1];
+                for (int l = 1; l < Layers.Length; l++)
+                {
+                    layerTempVectors1[l - 1] = Vector<double>.Build.Dense(Layers[l].NodeCount);
+                }
+                layerTempVectors2 = new Vector<double>[Layers.Length - 1];
+                for (int l = 1; l < Layers.Length; l++)
+                {
+                    layerTempVectors2[l - 1] = Vector<double>.Build.Dense(Layers[l].NodeCount);
+                }
+                layerTempVectors3 = new Vector<double>[Layers.Length - 1];
+                for (int l = 1; l < Layers.Length; l++)
+                {
+                    layerTempVectors3[l - 1] = Vector<double>.Build.Dense(Layers[l].NodeCount);
+                }
+            }
         }
 
         public Layer[] Layers { get; private set; }
@@ -80,23 +100,35 @@ namespace Assets.Scripts
         {
             return FeedForward(inputs, nn.Layers, 1);
         }
+
+        private static Vector<double>[] layerTempVectors1 = null;
+        private static Vector<double>[] layerTempVectors2 = null;
+        private static Vector<double>[] layerTempVectors3 = null;
         public static Vector<double> FeedForward(Vector<double> inputs, Layer[] layers, int layerIndex)
         {
-            var output = Activate(layers[layerIndex].Weights.Multiply(inputs).Add(layers[layerIndex].Biases), layers[layerIndex].Activation);
+            // Profiler.BeginSample("FeedForward Sum");
+            layers[layerIndex].Weights.Multiply(inputs, layerTempVectors1[layerIndex - 1]);
+            layerTempVectors1[layerIndex - 1].Add(layers[layerIndex].Biases, layerTempVectors2[layerIndex - 1]);
+            // Profiler.EndSample();
+            // Profiler.BeginSample("FeedForward Activate");
+            Activate(layerTempVectors2[layerIndex - 1], layers[layerIndex].Activation, layerTempVectors3[layerIndex - 1]);
+            // Profiler.EndSample();
             if (layerIndex == layers.Length - 1)
-                return output;
-            return FeedForward(output, layers, layerIndex + 1);
+                return layerTempVectors3[layerIndex - 1];
+            return FeedForward(layerTempVectors3[layerIndex - 1], layers, layerIndex + 1);
         }
 
-        public static Vector<double> Activate(Vector<double> X, EnmActivations activation)
+        public static void Activate(Vector<double> X, EnmActivations activation, Vector<double> result)
         {
             switch (activation)
             {
                 default:
                 case EnmActivations.LRelu:
-                    return Activations.LeakyReLU(X, 0.2);
+                    Activations.LeakyReLU(X, 0.2, result);
+                    return;
                 case EnmActivations.Sigmoid:
-                    return Activations.Sigmoid(X);
+                    Activations.Sigmoid(X, result);
+                    return;
             }
         }
 

@@ -11,9 +11,9 @@ namespace Assets.Scripts
         {
             return x < 0 ? a * x : x;
         }
-        public static Vector<double> LeakyReLU(Vector<double> X, double a)
+        public static void LeakyReLU(Vector<double> X, double a, Vector<double> result)
         {
-            return X.Map(x => LeakyReLU(x, a));
+            X.Map(x => LeakyReLU(x, a), result);
         }
         public static Matrix<double> LeakyReLU(Matrix<double> X, double a)
         {
@@ -25,9 +25,9 @@ namespace Assets.Scripts
             return X.Map<double>(x => Math.Tanh(x));
         }
 
-        public static Vector<double> Sigmoid(Vector<double> X)
+        public static void Sigmoid(Vector<double> X, Vector<double> result)
         {
-            return X.Map<double>(x => Sigmoid(x));
+            X.Map(x => Sigmoid(x), result);
         }
         public static double Sigmoid(double x)
         {

@@ -21,11 +21,16 @@ namespace Assets.Scripts
         public event EventHandler<double[]> OnInput;
 
         public Collider2D ballCollider { get; private set; }
+        public Renderer ballRenderer { get; private set; }
+        public SpriteRenderer ballSpriteRenderer { get; private set; }
         public Vector2 ballInitialPosition = new Vector2();
         private Rigidbody2D ballRigidbody;
 
         private PlayerInputActions playerActions;
         new private Rigidbody2D rigidbody;
+        new private Renderer renderer;
+        private SpriteRenderer spriteRenderer;
+
 
         private const float BallHitDistance = 0.6f;
         private const float BallHitForce = 50f;
@@ -37,11 +42,15 @@ namespace Assets.Scripts
         void Awake()
         {
             rigidbody = GetComponent<Rigidbody2D>();
+            renderer = GetComponent<Renderer>();
+            spriteRenderer = GetComponent<SpriteRenderer>();
             BallPrefab.transform.position = Evolution.GetRandomPosition();
             ballInitialPosition = BallPrefab.transform.position;
             var ball = Instantiate(BallPrefab);
             ballRigidbody = ball.GetComponent<Rigidbody2D>();
             ballCollider = ball.GetComponent<Collider2D>();
+            ballRenderer = ball.GetComponent<Renderer>();
+            ballSpriteRenderer = ball.GetComponent<SpriteRenderer>();
 
             playerActions = new PlayerInputActions();
             playerActions.Player.Move.performed += Move_performed;
@@ -66,6 +75,12 @@ namespace Assets.Scripts
             playerActions.Player.Shoot.Disable();
         }
 
+        public void EnableRenderer(bool enable)
+        {
+            spriteRenderer.enabled = enable;
+            ballSpriteRenderer.enabled = enable;
+        }
+
         // User input
         private void Shoot_performed(InputAction.CallbackContext ctx)
         {
@@ -82,15 +97,15 @@ namespace Assets.Scripts
         // Update is called once per frame
         void FixedUpdate()
         {
+            // var aaa = Time.realtimeSinceStartup;
             if (OnInput != null)
             {
-                // var aaa = Time.realtimeSinceStartup;
-                // Debug.Log((Time.realtimeSinceStartup - aaa) / 1000);
                 var inputs = PrepareInputs();
                 OnInput.Invoke(this, inputs);
             }
 
             rigidbody.AddForce(moveVector * Speed * Time.deltaTime);
+            // Debug.Log((Time.realtimeSinceStartup - aaa) * 1000 * 300);
         }
 
 
@@ -155,7 +170,7 @@ namespace Assets.Scripts
             moveVector = moveVector.normalized;
 
             // Debug.Log(output[2]);
-            if ((float)output[2] > 0.7f)
+            if ((float)output[2] > 0.8f)
                 Shoot();
         }
 
@@ -206,8 +221,8 @@ namespace Assets.Scripts
 
         public void HideYourself()
         {
-            GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(0, 0, 0, 0));
-            ballCollider.GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(0, 0, 0, 0));
+            renderer.material.SetColor("BodyColor", new Color32(0, 0, 0, 0));
+            ballRenderer.material.SetColor("BodyColor", new Color32(0, 0, 0, 0));
         }
 
         public void UpdateColor(float? fitnessRatio = null)
@@ -217,14 +232,14 @@ namespace Assets.Scripts
             {
                 // default color
                 color = new Color32(58, 180, 58, 255);
-                ballCollider.GetComponent<Renderer>().material.SetColor("BodyColor", new Color32(200, 20, 20, 255));
+                ballRenderer.material.SetColor("BodyColor", new Color32(200, 20, 20, 255));
             }
             else
             {
                 byte colorValue = (byte)Math.Ceiling(Mathf.Min(Mathf.Max((float)fitnessRatio * 255, 0), 255));
                 color = new Color32(colorValue, colorValue, colorValue, 255);
             }
-            GetComponent<Renderer>().material.SetColor("BodyColor", color);
+            renderer.material.SetColor("BodyColor", color);
         }
     }
 }

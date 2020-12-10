@@ -89,9 +89,9 @@ namespace Assets.Scripts
         }
         private void LateUpdate()
         {
-            // currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
-            // currentGeneration.Take(Mathf.CeilToInt(currentGeneration.Count * 0.1f)).ToList().ForEach(a => a.EnableRenderer(true));
-            // currentGeneration.GetRange(Mathf.CeilToInt(currentGeneration.Count * 0.1f), Mathf.CeilToInt(currentGeneration.Count * 0.9f)).ToList().ForEach(a => a.EnableRenderer(false));
+            currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
+            currentGeneration.Take(Mathf.CeilToInt(currentGeneration.Count * 0.1f)).ToList().ForEach(a => a.EnableRenderer(true));
+            currentGeneration.GetRange(Mathf.CeilToInt(currentGeneration.Count * 0.1f), Mathf.CeilToInt(currentGeneration.Count * 0.9f)).ToList().ForEach(a => a.EnableRenderer(false));
         }
 
         private void StartSimulation()

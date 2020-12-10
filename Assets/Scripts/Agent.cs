@@ -39,8 +39,7 @@ namespace Assets.Scripts
 
         public void EnableRenderer(bool enable)
         {
-            Player.GetComponent<SpriteRenderer>().enabled = enable;
-            Player.ballCollider.gameObject.GetComponent<SpriteRenderer>().enabled = enable;
+            Player.EnableRenderer(enable);
         }
 
         // We want to reuse this object instead of creating new ones each generation.
