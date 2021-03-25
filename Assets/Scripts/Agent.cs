@@ -95,7 +95,7 @@ namespace Assets.Scripts
         {
             if (!IsActive)
                 return;
-                
+
             Vector<double>.Build.DenseOfArray(inputs);
             Player.ApplyOutput(FeedForwardNN.FeedForward(Brain, Vector<double>.Build.DenseOfArray(inputs)).AsArray());
             CalculateFitness();
@@ -118,8 +118,9 @@ namespace Assets.Scripts
             // Take ball to the right goal
             if (touchedBall)
             {
-                var fitnessByDis = Mathf.Pow(Mathf.Lerp(1, 0, Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position) / Vector2.Distance(BallInitialPosition, RightGoalPosition)), 2);
-                currentFitness += fitnessByDis * (shotTheBall ? 1 : 0.5f);
+                var fitnessByDis = Mathf.Lerp(1, 0, Vector2.Distance(RightGoalPosition, Player.ballCollider.transform.position) / Vector2.Distance(BallInitialPosition, RightGoalPosition));
+                // Give more fitness if the agent shot the ball instead of dribbling
+                currentFitness += fitnessByDis * (shotTheBall ? 1 : 0.2f);
             }
 
             if (touchedRightGoal && shotTheBall)
@@ -156,12 +157,12 @@ namespace Assets.Scripts
             // }
 
 
-            if (!fitnessCanIncrease)
-                return;
-            fitness += currentFitness;
-
-            if (shotTheBall)
+            if (fitness >= Evolution.MinFitness)
                 Player.UpdateColor((fitness - Evolution.MinFitness) / (Evolution.MaxFitness - Evolution.MinFitness));
+
+            if (fitnessCanIncrease)
+                fitness += currentFitness;
+
         }
 
 
@@ -171,7 +172,9 @@ namespace Assets.Scripts
                 return;
             Player.OnShootTheBall -= Player_OnShootTheBall;
             shotTheBall = true;
-            fitness = fitness == Mathf.NegativeInfinity ? 0 : fitness;
+            
+            shotTheBallRewarded = false;
+            fitness = fitnessCanIncrease ? fitness : (fitness > Mathf.NegativeInfinity ? fitness + 10 : 10);
             fitnessCanIncrease = true; // this means; if didnt shot the ball, player gets no point.
         }
 
@@ -196,7 +199,7 @@ namespace Assets.Scripts
                 return;
             Player.OnBallCollisionEnter -= Player_OnBallCollisionEnter;
             touchedBall = true;
-            fitness = fitness == Mathf.NegativeInfinity ? 10 : fitness;
+            fitness = fitnessCanIncrease ? fitness : (fitness > Mathf.NegativeInfinity ? fitness + 10 : 10);
             fitnessCanIncrease = true;
         }
 

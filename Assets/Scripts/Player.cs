@@ -8,7 +8,7 @@ namespace Assets.Scripts
 {
     public class Player : MonoBehaviour
     {
-        public GameObject BallPrefab;
+        public Ball BallPrefab;
 
         public Transform rightGoalTransform;
 
@@ -20,6 +20,7 @@ namespace Assets.Scripts
         public event EventHandler OnCornerCollisionStay2D;
         public event EventHandler<double[]> OnInput;
 
+        public Ball ball { get; private set; }
         public Collider2D ballCollider { get; private set; }
         public Renderer ballRenderer { get; private set; }
         public SpriteRenderer ballSpriteRenderer { get; private set; }
@@ -46,7 +47,7 @@ namespace Assets.Scripts
             spriteRenderer = GetComponent<SpriteRenderer>();
             BallPrefab.transform.position = Evolution.GetRandomPosition();
             ballInitialPosition = BallPrefab.transform.position;
-            var ball = Instantiate(BallPrefab);
+            ball = Instantiate(BallPrefab);
             ballRigidbody = ball.GetComponent<Rigidbody2D>();
             ballCollider = ball.GetComponent<Collider2D>();
             ballRenderer = ball.GetComponent<Renderer>();
@@ -57,6 +58,24 @@ namespace Assets.Scripts
             playerActions.Player.Move.Enable();
             playerActions.Player.Shoot.performed += Shoot_performed;
             playerActions.Player.Shoot.Enable();
+
+            ball.OnRightGoalCollisionEnter += Ball_OnRightGoalCollisionEnter;
+            ball.OnRightGoalCollisionStay += Ball_OnRightGoalCollisionStay;
+        }
+
+        private void OnDestroy() {
+            ball.OnRightGoalCollisionEnter -= Ball_OnRightGoalCollisionEnter;
+            ball.OnRightGoalCollisionStay -= Ball_OnRightGoalCollisionStay;
+        }
+
+        private void Ball_OnRightGoalCollisionEnter(object sender, System.EventArgs e)
+        {
+            OnRightGoalCollisionEnter?.Invoke(this, null);
+        }
+
+        private void Ball_OnRightGoalCollisionStay(object sender, System.EventArgs e)
+        {
+            OnRightGoalCollisionStay?.Invoke(this, null);
         }
 
         // We want to reuse this object instead of creating new ones each generation.
@@ -113,7 +132,7 @@ namespace Assets.Scripts
         {
             // 0,1: direction of the ball
             // 8: distance to the ball
-            double[] inputs = new double[6];
+            double[] inputs = new double[4];
 
             // Player to Ball
             var diffVec = transform.position - ballRigidbody.transform.position;
@@ -142,10 +161,10 @@ namespace Assets.Scripts
             // inputs[1] = diffVec.y;
 
             // Ball to Right Goal
-            diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
-            angle = Mathf.Atan2(diffVec.y, diffVec.x);
-            inputs[4] = Mathf.Sin(angle);
-            inputs[5] = Mathf.Cos(angle);
+            // diffVec = ballRigidbody.transform.position - rightGoalTransform.position;
+            // angle = Mathf.Atan2(diffVec.y, diffVec.x);
+            // inputs[4] = Mathf.Sin(angle);
+            // inputs[5] = Mathf.Cos(angle);
 
             // // Distance
             // inputs[8] = diffVec.magnitude;
@@ -164,10 +183,10 @@ namespace Assets.Scripts
             // return;
             // 0: acc x
             // 1: acc y
-            moveVector[0] = (float)output[0] - 0.5f;
-            moveVector[1] = (float)output[1] - 0.5f;
+            moveVector[0] = (float)output[0];
+            moveVector[1] = (float)output[1];
 
-            moveVector = moveVector.normalized;
+            // moveVector = moveVector.normalized;
 
             // Debug.Log(output[2]);
             if ((float)output[2] > 0.8f)
@@ -200,22 +219,11 @@ namespace Assets.Scripts
             }
         }
 
-        private void OnTriggerEnter2D(Collider2D collider)
-        {
-            if (collider.CompareTag("RightGoal"))
-            {
-                OnRightGoalCollisionEnter?.Invoke(this, null);
-            }
-        }
         private void OnTriggerStay2D(Collider2D collider)
         {
             if (collider.CompareTag("Corner"))
             {
                 OnCornerCollisionStay2D?.Invoke(this, null);
-            }
-            else if (collider.CompareTag("RightGoal"))
-            {
-                OnRightGoalCollisionStay?.Invoke(this, null);
             }
         }
 

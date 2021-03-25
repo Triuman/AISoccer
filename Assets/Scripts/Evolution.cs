@@ -15,6 +15,8 @@ namespace Assets.Scripts
         public Text TxtGeneration;
         public Text TxtPopulation;
         public Text TxtTraining;
+        public Text TxtMinFitness;
+        public Text TxtMaxFitness;
 
         public static float MinFitness = Mathf.Infinity;
         public static float MaxFitness = Mathf.NegativeInfinity;
@@ -25,14 +27,14 @@ namespace Assets.Scripts
         private const float MaxY = 2.5f;
         private static readonly Random random = new Random(Guid.NewGuid().GetHashCode());
 
-        private static float timeScale = 8f;
+        private static float timeScale = 20f;
         private static LayerDefinition[] layerDefinitions;
-        private static int population = 300;
-        private static double mutationRate = 0.3;
+        private static int population = 100;
+        private static double mutationRate = 0.2;
         private static float eliteRatio = 0.1f; //the number of best agents who go to next generation unchanged.
-        private static float newAgentsRatio = 0.1f; //the number of randomly generated agents each generation.
+        private static float newAgentsRatio = 0.05f; //the number of randomly generated agents each generation.
 
-        private static int trainingCount = 5; // Each generation will train x many times with random position before generating new generation.
+        private static int trainingCount = 8; // Each generation will train x many times with random position before generating new generation.
 
         private static int generationNo = 0;
         private static int trainingNo = 0;
@@ -63,11 +65,11 @@ namespace Assets.Scripts
             // SampleAgent.Activate();
 
             layerDefinitions = new LayerDefinition[] {
-                new LayerDefinition(6, EnmActivations.None),
-                new LayerDefinition(10, EnmActivations.LRelu),
+                new LayerDefinition(4, EnmActivations.None),
+                new LayerDefinition(3, EnmActivations.LRelu),
                 new LayerDefinition(3, EnmActivations.LRelu)
             };
-  
+
             Time.timeScale = timeScale;
 
             InitGeneration();
@@ -89,11 +91,20 @@ namespace Assets.Scripts
         }
         private void LateUpdate()
         {
-            currentGeneration = currentGeneration.OrderByDescending(a => a.fitness).ToList();
-            currentGeneration.Take(Mathf.CeilToInt(currentGeneration.Count * 0.1f)).ToList().ForEach(a => a.EnableRenderer(true));
-            currentGeneration.GetRange(Mathf.CeilToInt(currentGeneration.Count * 0.1f), Mathf.CeilToInt(currentGeneration.Count * 0.9f)).ToList().ForEach(a => a.EnableRenderer(false));
+            // How many agent is visible at a time. The best ones are shown.
+            int showCount = Mathf.CeilToInt(currentGeneration.Count * 1f);
+            currentGeneration = currentGeneration.OrderBy(a => a.fitness).ToList();
+            for (int i = currentGeneration.Count - 1; i > currentGeneration.Count -1  - showCount; i--)
+            {
+                currentGeneration[i].EnableRenderer(true);
+            }
+            currentGeneration.Take(currentGeneration.Count - showCount).ToList().ForEach(a => a.EnableRenderer(false));
+            MaxFitness = currentGeneration.Last().fitness;
+            MinFitness = currentGeneration.Where(a => a.fitness != Mathf.NegativeInfinity).FirstOrDefault()?.fitness ?? 0;
+            TxtMinFitness.text = MinFitness.ToString();
+            TxtMaxFitness.text = MaxFitness.ToString();
         }
-
+        
         private void StartSimulation()
         {
             trainingNo++;
