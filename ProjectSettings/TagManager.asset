@@ -7,6 +7,11 @@ TagManager:
   - Ball
   - Corner
   - RightGoal
+  - LeftGoal
+  - RedPlayer
+  - BluePlayer
+  - InnerWall
+  - OuterBorder
   layers:
   - Default
   - TransparentFX
